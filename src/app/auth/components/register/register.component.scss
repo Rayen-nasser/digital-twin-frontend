@@ -1,0 +1,61 @@
+/* Profile Picture Styles */
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+label img {
+  transition: opacity 0.3s ease;
+}
+
+label:hover img {
+  opacity: 0.9;
+}
+
+label .fas {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9fafb;
+  padding: 20px;
+}
+
+input, select {
+  border: 1px solid #d1d5db;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+button {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #2563eb;
+}
+
+button:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
