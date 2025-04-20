@@ -1,0 +1,52 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="max-w-sm w-full p-8 bg-white shadow-xl rounded-lg">
+    <h2 class="text-3xl font-bold text-center mb-6">Login to Your Account</h2>
+
+    <form (ngSubmit)="onSubmit()" [formGroup]="loginForm">
+      <!-- Error message for invalid form -->
+      <!-- <div *ngIf="loginForm.invalid " class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm font-medium rounded-md error-message">
+        Please fill in the required fields correctly.
+      </div> -->
+
+      <div class="mb-6">
+        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          [ngClass]="{'border-red-500': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}"
+          placeholder="Enter your email"
+        />
+      </div>
+
+      <div class="mb-6">
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          [ngClass]="{'border-red-500': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+          placeholder="Enter your password"
+        />
+
+      </div>
+
+      <div class="mb-6">
+        <button
+          type="submit"
+          class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+          [disabled]="!loginForm.valid || loading"
+        >
+          <span *ngIf="loading">Logging in...</span>
+          <span *ngIf="!loading">Login</span>
+        </button>
+      </div>
+
+      <p class="mt-4 text-center text-sm text-gray-600">
+        Don’t have an account? <a href="/auth/register" class="text-blue-600 hover:underline">Register</a>
+      </p>
+    </form>
+  </div>
+</div>
