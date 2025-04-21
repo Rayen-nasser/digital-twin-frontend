@@ -9,14 +9,14 @@
       </div> -->
 
       <div class="mb-6">
-        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
         <input
-          type="email"
-          id="email"
-          formControlName="email"
+          type="username"
+          id="username"
+          formControlName="username"
           class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          [ngClass]="{'border-red-500': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}"
-          placeholder="Enter your email"
+          [ngClass]="{'border-red-500': loginForm.get('username')?.invalid && loginForm.get('username')?.touched}"
+          placeholder="Enter your username"
         />
       </div>
 

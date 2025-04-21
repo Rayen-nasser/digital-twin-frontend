@@ -24,7 +24,7 @@ export class LoginComponent {
     private spinner: NgxSpinnerService
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
@@ -35,7 +35,7 @@ export class LoginComponent {
       this.errorMessage = null; // Reset the error message
       from(
         this.authService.login(
-          this.loginForm.value.email,
+          this.loginForm.value.username,
           this.loginForm.value.password
         )
       ).subscribe(
@@ -44,7 +44,7 @@ export class LoginComponent {
           // Show success toast message
           this.toastr.success('Login successful!', response.message);
           // Navigate to the dashboard or another page
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/home']);
         },
         (error: any) => {
           this.spinner.hide();
