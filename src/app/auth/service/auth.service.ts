@@ -12,23 +12,29 @@ export class AuthService {
   constructor(private httpClient: HttpClient) {}
 
   // Login method
-  login(email: string, password: string): Observable<any>  {
-    return this.httpClient.post(`${this.apiUrl}/login/`, { email, password }).pipe(
+  login(username: string, password: string): Observable<any>  {
+    return this.httpClient.post(`${this.apiUrl}/login/`, { username, password }).pipe(
       map((response: any) => {
-        const { tokens } = response;
+
+        const { access, refresh } = response;
 
         // Store access token in sessionStorage (valid for this session)
-        sessionStorage.setItem('access_token', tokens.access);
+        sessionStorage.setItem('access_token', access);
 
         // Store refresh token in localStorage (persists across sessions)
-        localStorage.setItem('refresh_token', tokens.refresh);
+        localStorage.setItem('refresh_token', refresh);
 
         // Store user profile in localStorage (persists across sessions)
         localStorage.setItem('userProfile', JSON.stringify(response.user));
+        console.log(response);
 
         return response;
       })
     );
+  }
+
+  isLoggedIn(){
+    return this.getAccessToken() !== null;
   }
 
   // Register method
@@ -36,13 +42,13 @@ export class AuthService {
     return this.httpClient.post(`${this.apiUrl}/register/`, data)
       .toPromise()
       .then((response: any) => {
-        const { tokens } = response as any;
+        const { user } = response as any;
 
         // Store access token in sessionStorage (valid for this session)
-        sessionStorage.setItem('access_token', tokens.access);
+        sessionStorage.setItem('access_token', user.access);
 
         // Store refresh token in localStorage (persists across sessions)
-        localStorage.setItem('refresh_token', tokens.refresh);
+        localStorage.setItem('refresh_token', user.refresh);
 
         // Store user profile in localStorage (persists across sessions)
         localStorage.setItem('user_profile', JSON.stringify(response.user));
@@ -64,11 +70,13 @@ export class AuthService {
   // Logout method: Clear sessionStorage and localStorage
   logout() {
     const payload = {
-      "refresh": localStorage.removeItem('refresh_token')
+      "refresh": localStorage.getItem('refresh_token')
     }
-    sessionStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     return this.httpClient.post(`${this.apiUrl}/logout/`, payload)
+  }
+
+  emailVerification(token: any){
+    return this.httpClient.post(`${this.apiUrl}/verify-email/`, { token }).toPromise();
   }
 
 }
