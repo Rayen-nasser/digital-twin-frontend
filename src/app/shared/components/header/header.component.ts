@@ -13,6 +13,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/service/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { User } from '../../../interfaces/user.interface';
 
 @Component({
   selector: 'app-header',
@@ -21,8 +22,8 @@ import { ThemeService } from '../../../core/services/theme.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-  isLoggedIn: boolean = true;
-  user: any | null = null;
+  isLoggedIn: boolean = false;
+  user: User | null = null;
   showDropdown: boolean = false;
   showMobileMenu: boolean = false;
   isHomePage: boolean = false;
@@ -45,6 +46,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.isLoggedIn = this.authService.isLoggedIn()
     this.isDarkMode = this.themeService.isDarkMode();
 
     this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
@@ -74,6 +76,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.isHomePage) {
       this.checkActiveSection();
     }
+
+    // get user profile from localstorage
+    const userProfile = localStorage.getItem('userProfile');
+    this.user = userProfile ? JSON.parse(userProfile) : null;
   }
 
   ngOnDestroy(): void {
@@ -151,17 +157,39 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   getUserInitials(): string {
-    if (!this.user || !this.user.displayName) return 'U';
-    const names = this.user.displayName.split(' ');
+    if (!this.user || !this.user.profile_image) return 'U';
+    const names = this.user.username.split(' ');
     return names.length >= 2
       ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
       : names[0][0].toUpperCase();
   }
 
   logout(): void {
-    // this.authService.logout().then(() => {
-    //   this.router.navigate(['/']);
-    //   this.showDropdown = false;
-    // });
+    this.authService.logout().subscribe({
+      next: () => {
+        sessionStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+
+        // Clear user data
+        this.isLoggedIn = false;
+        this.user = null;
+        localStorage.removeItem('userProfile'); // Ensure local storage is also cleared
+
+        // Force UI update in multiple ways
+        this.cdr.markForCheck();
+        setTimeout(() => this.cdr.detectChanges(), 0); // Schedule detection for the next tick
+
+        // Navigate after state change
+        this.router.navigate(['/home']);
+        this.showDropdown = false;
+      },
+      error: (err) => {
+        console.error('Logout error:', err);
+        // Still try to update UI state even if API fails
+        this.isLoggedIn = false;
+        this.user = null;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }
