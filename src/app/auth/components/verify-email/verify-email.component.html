@@ -1,0 +1,33 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md text-center">
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex flex-col items-center">
+      <svg class="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <p class="text-gray-700 text-lg">Verifying your email address...</p>
+    </div>
+
+    <!-- Success -->
+    <div *ngIf="success" class="flex flex-col items-center text-green-600">
+      <svg class="h-12 w-12 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+      <h2 class="text-2xl font-semibold mb-2">Email Verified!</h2>
+      <p class="text-gray-600">You’ll be redirected shortly...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="flex flex-col items-center text-red-600">
+      <svg class="h-12 w-12 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      <h2 class="text-2xl font-semibold mb-2">Verification Failed</h2>
+      <p class="text-gray-600 mb-4">The verification link is invalid or has expired.</p>
+      <button (click)="goHome()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+        Back to Home
+      </button>
+    </div>
+  </div>
+</div>
