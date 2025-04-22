@@ -78,7 +78,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     // get user profile from localstorage
-    const userProfile = localStorage.getItem('userProfile');
+    const userProfile = localStorage.getItem('user_profile');
     this.user = userProfile ? JSON.parse(userProfile) : null;
   }
 
@@ -173,7 +173,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         // Clear user data
         this.isLoggedIn = false;
         this.user = null;
-        localStorage.removeItem('userProfile'); // Ensure local storage is also cleared
+        localStorage.removeItem('user_profile'); // Ensure local storage is also cleared
 
         // Force UI update in multiple ways
         this.cdr.markForCheck();
