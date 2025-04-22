@@ -1,80 +1,119 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-4">
-  <div class="max-w-md w-full p-8 bg-white shadow-md rounded-lg">
-    <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Create Your Account</h2>
+<!-- Step 1: Registration Form -->
+<div *ngIf="step === 1" class="register-form-container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="text-center text-2xl font-bold text-gray-900">Create Your Account</h2>
+      <p class="text-center text-gray-600 mt-2">Join our community and get started</p>
+    </div>
 
-    <!-- Profile Picture -->
-    <div class="flex justify-center mb-6">
-      <div class="relative w-24 h-24">
-        <input
-          type="file"
-          id="profile"
-          (change)="onFileChange($event)"
-          class="hidden"
-        />
-        <label for="profile" class="cursor-pointer">
-          <img
-            [src]="profilePicturePreview || 'https://placehold.jp/150x150.png'"
-            alt="Profile"
-            class="w-24 h-24 rounded-full object-cover border-4 border-blue-600 transition-transform transform hover:scale-105"
-          />
-          <div
-            class="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs border-2 border-white shadow-md transition-transform transform hover:scale-110"
-          >
+    <div class="card-body">
+      <!-- Profile Picture -->
+      <div class="profile-picture-container">
+        <input type="file" id="profile" (change)="onFileChange($event)" class="hidden" accept="image/*">
+        <label for="profile" class="cursor-pointer block">
+          <img [src]="profilePicturePreview || 'https://placehold.jp/150x150.png'" alt="Profile" class="profile-picture">
+          <div class="profile-picture-overlay">
+            <span>Change Photo</span>
+          </div>
+          <div class="camera-icon">
             <i class="fas fa-camera"></i>
           </div>
         </label>
       </div>
+
+      <form (ngSubmit)="onSubmit()" [formGroup]="registerForm">
+        <!-- Username -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" formControlName="username" class="form-control" placeholder="Choose a unique username">
+          <div *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched" class="text-red-500 text-sm mt-1">
+            Please enter a valid username
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input type="email" id="email" formControlName="email" class="form-control" placeholder="you@example.com">
+          <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500 text-sm mt-1">
+            Please enter a valid email address
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" formControlName="password" class="form-control" placeholder="Create a secure password">
+          <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-sm mt-1">
+            Password must be at least 8 characters
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary w-full" [disabled]="!registerForm.valid">
+          Create Account
+        </button>
+      </form>
     </div>
 
-    <form (ngSubmit)="onSubmit()" [formGroup]="registerForm">
-      <!-- Username -->
-      <div class="mb-6">
-        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-        <input
-          type="text"
-          id="username"
-          formControlName="username"
-          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter your username"
-        />
-      </div>
+    <div class="card-footer">
+      <p class="text-gray-600">
+        Already have an account?
+        <a href="/auth/login" class="text-blue-600 hover:underline font-medium">Log in</a>
+      </p>
+    </div>
+  </div>
+</div>
 
-      <!-- Email -->
-      <div class="mb-6">
-        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter your email"
-        />
-      </div>
+<!-- Step 2: Verification instructions -->
+<div *ngIf="step === 2" class="verification-container">
+  <div class="verification-card">
+    <div class="success-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
 
-      <!-- Password -->
-      <div class="mb-6">
-        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          id="password"
-          formControlName="password"
-          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          placeholder="Create a password"
-        />
-      </div>
-
-      <!-- Submit Button -->
-      <button
-        type="submit"
-        class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none transition-colors"
-        [disabled]="!registerForm.valid"
-      >
-        Register
-      </button>
-    </form>
-
-    <p class="mt-4 text-center text-sm text-gray-600">
-      Already have an account? <a href="/auth/login" class="text-blue-600 hover:underline">Login</a>
+    <h2 class="verification-title">Almost there!</h2>
+    <p class="verification-message">
+      We've sent a verification email to <span class="verification-email">{{ submittedEmail }}</span>
     </p>
+
+    <div class="verification-steps">
+      <h3 class="verification-steps-title">Next steps:</h3>
+      <ul class="steps-list">
+        <li class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-text">Check your email inbox (and spam folder)</div>
+        </li>
+        <li class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-text">Click the verification link in our email</div>
+        </li>
+        <li class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-text">Return here to start using your account</div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="email-not-received">
+      <h4 class="not-received-title">Didn't receive our email?</h4>
+      <p class="text-gray-600 text-sm mb-3">Check your spam folder or request a new verification email</p>
+      <button class="btn btn-secondary w-full" (click)="resendVerification()" [disabled]="isLoading">
+        <div *ngIf="isLoading" class="spinner"></div>
+        <span>Resend Verification Email</span>
+      </button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-outline flex-1" (click)="goToLogin()">
+        Go to Login
+      </button>
+      <button class="btn btn-link flex-1" (click)="continueBrowsing()">
+        Continue Browsing
+      </button>
+    </div>
   </div>
 </div>

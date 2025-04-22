@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { AuthService } from '../../service/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
 
 interface ValidationErrors {
   [key: string]: string[];
@@ -19,12 +20,15 @@ export class RegisterComponent {
   profilePicturePreview: string | null = null;
   isLoading = false;
   isValidFile = true;
+  submittedEmail = '';
+  step = 1; // Step 1: Form, Step 2: Verification instructions
 
   constructor(
     private fb: FormBuilder,
     private spinner: NgxSpinnerService,
     private authService: AuthService,
-    private toastService: ToastrService
+    private toastService: ToastrService,
+    private router: Router
   ) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -36,6 +40,22 @@ export class RegisterComponent {
   onFileChange(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
+      // File size validation (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.isValidFile = false;
+        this.toastService.warning('Profile image must be less than 5MB', 'File Too Large');
+        return;
+      }
+
+      // File type validation
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        this.isValidFile = false;
+        this.toastService.warning('Please upload a JPG, PNG or GIF image', 'Invalid File Type');
+        return;
+      }
+
+      this.isValidFile = true;
       this.profilePicture = file;
       const reader = new FileReader();
       reader.onload = () => {
@@ -83,8 +103,23 @@ export class RegisterComponent {
     }
   }
 
+  // Shows form field validation errors without waiting for submit
+  getFieldError(fieldName: string): string {
+    const control = this.registerForm.get(fieldName);
+    if (control && control.touched && control.errors) {
+      if (control.errors['required']) return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+      if (control.errors['minlength']) return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${control.errors['minlength'].requiredLength} characters`;
+      if (control.errors['email']) return 'Please enter a valid email address';
+    }
+    return '';
+  }
 
   onSubmit(): void {
+    // Mark all fields as touched to trigger validation messages
+    Object.keys(this.registerForm.controls).forEach(key => {
+      this.registerForm.get(key)?.markAsTouched();
+    });
+
     if (this.registerForm.valid) {
       const formData = new FormData();
 
@@ -93,25 +128,29 @@ export class RegisterComponent {
       formData.append('email', this.registerForm.get('email')?.value);
       formData.append('password', this.registerForm.get('password')?.value);
 
+      // Save email for potential resend verification
+      this.submittedEmail = this.registerForm.get('email')?.value;
+      localStorage.setItem('pending_verification_email', this.submittedEmail);
+
       // Append the file
       if(this.profilePicture){
         formData.append('profile_image', this.profilePicture);
       }
 
+      this.isLoading = true;
       this.spinner.show();
-      this.authService.register(formData).then(
+      this.authService.register(formData).subscribe(
         (data: any) => {
           console.log('Response:', data || 'No response body');
           this.spinner.hide();
-          this.registerForm.reset();
-          this.profilePicture = null;
-          this.profilePicturePreview = null;
-          this.isValidFile = true;
-          this.toastService.success('Registration successful. Please log in.');
-        }
-      ).catch(
+          this.isLoading = false;
+
+          // Move to verification instructions screen
+          this.step = 2;
+        },
         (error: any) => {
           this.spinner.hide();
+          this.isLoading = false;
 
           if (error.error && typeof error.error === 'object') {
             // Handle validation errors
@@ -134,8 +173,41 @@ export class RegisterComponent {
         }
       );
     } else {
-      this.toastService.error('Please fill in all required fields.', 'Validation Error');
+      this.toastService.error('Please fill in all required fields correctly.', 'Validation Error');
+    }
+  }
+
+  // Resend verification email
+  resendVerification(): void {
+    if (!this.submittedEmail) {
+      this.toastService.error('Email address not found', 'Error');
       return;
     }
+
+    this.isLoading = true;
+    this.spinner.show();
+
+    this.authService.resendVerificationEmail(this.submittedEmail).subscribe(
+      () => {
+        this.spinner.hide();
+        this.isLoading = false;
+        this.toastService.success('Verification email sent again!', 'Success');
+      },
+      (error) => {
+        this.spinner.hide();
+        this.isLoading = false;
+        this.toastService.error('Failed to resend verification email', 'Error');
+      }
+    );
+  }
+
+  // Continue to login
+  goToLogin(): void {
+    this.router.navigate(['/auth/login']);
+  }
+
+  // Continue browsing while waiting for verification
+  continueBrowsing(): void {
+    this.router.navigate(['/home']);
   }
 }
