@@ -1,4 +1,4 @@
-import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { APP_INITIALIZER, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -11,6 +11,12 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { SharedModule } from './shared/shared.module';
 import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core.module';
+import { AuthService } from './auth/service/auth.service';
+
+
+export function initializeApp(authService: AuthService) {
+  return () => authService.initApp();
+}
 
 @NgModule({
   declarations: [
@@ -30,6 +36,12 @@ import { CoreModule } from './core/core.module';
   ],
   providers: [
     provideClientHydration(),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeApp,
+      deps: [AuthService],
+      multi: true
+    }
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
