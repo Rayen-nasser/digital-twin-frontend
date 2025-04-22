@@ -1,33 +1,138 @@
-<div class="flex items-center justify-center min-h-screen bg-gray-100">
-  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md text-center">
-    <!-- Loading -->
-    <div *ngIf="loading" class="flex flex-col items-center">
-      <svg class="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-      </svg>
-      <p class="text-gray-700 text-lg">Verifying your email address...</p>
+<div class="verify-wrapper">
+  <div class="verify-box">
+    <!-- Pending Verification Instructions (when accessing /verify-email without token) -->
+    <div *ngIf="pendingVerification" class="verify-state pending-state">
+      <div class="email-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+
+      <h2>Please Verify Your Email</h2>
+
+      <div class="verification-info">
+        <p *ngIf="userEmail" class="email-sent-to">
+          We've sent a verification link to <strong>{{ userEmail }}</strong>
+        </p>
+        <p *ngIf="!userEmail" class="email-sent-to">
+          We've sent a verification link to your email address
+        </p>
+
+        <div class="verification-steps">
+          <h3>Next steps:</h3>
+          <ol>
+            <li>Check your email inbox (and spam folder)</li>
+            <li>Click the verification link in our email</li>
+            <li>You'll be redirected back here automatically</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="action-section">
+        <p class="resend-prompt">Didn't receive our email?</p>
+        <button
+          (click)="resendVerification()"
+          class="btn btn-primary resend-btn"
+          [disabled]="loading"
+        >
+          <div *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          Resend Verification Email
+        </button>
+
+        <div class="secondary-actions">
+          <button (click)="goToLogin()" class="btn btn-outline-secondary">
+            Return to Login
+          </button>
+          <button (click)="goHome()" class="btn btn-link">
+            Continue Browsing
+          </button>
+        </div>
+      </div>
+
+      <p class="limited-access-note">
+        You can continue using the site with limited features until verification is complete.
+      </p>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="verify-state">
+      <div class="spinner">
+        <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+      </div>
+      <h2>Verifying Your Email</h2>
+      <p class="verification-progress">This will only take a moment...</p>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
     </div>
 
     <!-- Success -->
-    <div *ngIf="success" class="flex flex-col items-center text-green-600">
-      <svg class="h-12 w-12 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-      <h2 class="text-2xl font-semibold mb-2">Email Verified!</h2>
-      <p class="text-gray-600">You’ll be redirected shortly...</p>
+    <div *ngIf="success" class="verify-state success-state">
+      <div *ngIf="showConfetti" class="confetti-container">
+        <div *ngFor="let i of [].constructor(20); let idx = index"
+             class="confetti"
+             [ngClass]="{'c1': idx % 3 === 0, 'c2': idx % 3 === 1, 'c3': idx % 3 === 2}">
+        </div>
+      </div>
+
+      <div class="success-icon">
+        <svg class="check-animation" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <h2>Email Verified!</h2>
+      <p class="success-message">Your account has been successfully verified.</p>
+
+      <div class="redirect-info">
+        <p class="redirect-countdown">
+          Redirecting to dashboard in <span class="countdown-number">{{ redirectCountdown }}</span> seconds
+        </p>
+        <div class="progress countdown-progress">
+          <div class="progress-bar" role="progressbar"
+               [style.width]="((redirectSeconds - redirectCountdown) / redirectSeconds) * 100 + '%'"
+               aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+
+      <button (click)="goDashboard()" class="btn btn-success dashboard-btn">
+        Go to Dashboard Now
+      </button>
     </div>
 
     <!-- Error -->
-    <div *ngIf="error" class="flex flex-col items-center text-red-600">
-      <svg class="h-12 w-12 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-      <h2 class="text-2xl font-semibold mb-2">Verification Failed</h2>
-      <p class="text-gray-600 mb-4">The verification link is invalid or has expired.</p>
-      <button (click)="goHome()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
-        Back to Home
-      </button>
+    <div *ngIf="error" class="verify-state error-state">
+      <div class="error-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+
+      <h2>Verification Failed</h2>
+      <p class="error-message">{{ errorMessage }}</p>
+
+      <div class="error-actions">
+        <button (click)="resendVerification()" class="btn btn-primary resend-btn">
+          <div *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          Resend Verification Email
+        </button>
+
+        <button (click)="goHome()" class="btn btn-outline-secondary">
+          Continue Browsing
+        </button>
+      </div>
+
+      <p class="limited-access-note">
+        You can continue using the site with limited features until verification is complete.
+      </p>
     </div>
   </div>
 </div>

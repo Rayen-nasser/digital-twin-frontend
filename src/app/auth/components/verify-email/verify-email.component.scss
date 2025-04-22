@@ -1,0 +1,548 @@
+// Enhanced Email Verification Styles
+// Main container styles
+.verify-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #f5f7fa;
+  background-image: linear-gradient(135deg, #f5f7fa 0%, #eef1f6 100%);
+}
+
+.verify-box {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 550px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  @media (max-width: 640px) {
+    padding: 2rem 1.5rem;
+    border-radius: 0.75rem;
+  }
+}
+
+// Shared verify state styles
+.verify-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
+
+    @media (max-width: 640px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  .verification-progress,
+  .success-message,
+  .error-message {
+    margin: 0.5rem 0 1rem;
+    color: #6b7280;
+    max-width: 400px;
+    font-size: 1.05rem;
+  }
+}
+
+// Loading state
+.spinner {
+  width: 70px;
+  height: 70px;
+  margin-bottom: 0.5rem;
+
+  .spinner-icon {
+    animation: spin 1.5s linear infinite;
+    color: #3b82f6;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-color: #e5e7eb;
+  margin-top: 0.75rem;
+
+  .progress-bar {
+    background-color: #3b82f6;
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  &.countdown-progress {
+    width: 240px;
+    margin: 0.75rem auto 1.5rem;
+  }
+}
+
+// Success state
+.success-state {
+  .success-icon {
+    width: 84px;
+    height: 84px;
+    background-color: #ecfdf5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+
+    svg {
+      width: 42px;
+      height: 42px;
+      color: #10b981;
+      animation: check-bounce 0.5s ease-out;
+    }
+  }
+
+  .success-message {
+    color: #059669;
+    font-weight: 500;
+    font-size: 1.125rem;
+  }
+
+  .redirect-info {
+    margin: 0.75rem 0 1rem;
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    width: 100%;
+
+    .redirect-countdown {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.95rem;
+
+      .countdown-number {
+        font-weight: 600;
+        color: #10b981;
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  .dashboard-btn {
+    background-color: #10b981;
+    border: none;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+
+    &:hover {
+      background-color: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.25);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Error state
+.error-state {
+  .error-icon {
+    width: 84px;
+    height: 84px;
+    background-color: #fee2e2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+
+    svg {
+      width: 42px;
+      height: 42px;
+      color: #ef4444;
+      animation: scale-in 0.4s ease-out;
+    }
+  }
+
+  .error-message {
+    color: #7f1d1d;
+    font-weight: 500;
+    max-width: 400px;
+    background-color: #fef2f2;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ef4444;
+  }
+
+  .error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 0.5rem;
+
+    button {
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// Pending verification state
+.pending-state {
+  .email-icon {
+    width: 84px;
+    height: 84px;
+    background-color: #eff6ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+
+    svg {
+      width: 42px;
+      height: 42px;
+      color: #3b82f6;
+      animation: float 3s ease-in-out infinite;
+    }
+  }
+
+  .verification-info {
+    margin: 1rem 0 1.5rem;
+    width: 100%;
+
+    .email-sent-to {
+      margin-bottom: 1.5rem;
+      color: #4b5563;
+      font-size: 1.05rem;
+
+      strong {
+        color: #1f2937;
+        font-weight: 600;
+        display: inline-block;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -3px;
+          left: 0;
+          width: 100%;
+          height: 2px;
+          background-color: #dbeafe;
+        }
+      }
+    }
+
+    .verification-steps {
+      text-align: left;
+      background-color: #f9fafb;
+      padding: 1.25rem 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+
+      h3 {
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+        color: #1f2937;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+
+        &::before {
+          content: '';
+          display: inline-block;
+          width: 4px;
+          height: 16px;
+          margin-right: 8px;
+          background-color: #3b82f6;
+          border-radius: 2px;
+        }
+      }
+
+      ol {
+        margin: 0;
+        padding-left: 1.75rem;
+        color: #4b5563;
+        counter-reset: steps;
+
+        li {
+          margin-bottom: 0.75rem;
+          position: relative;
+          padding-left: 0.5rem;
+
+          &::marker {
+            color: #3b82f6;
+            font-weight: 600;
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .action-section {
+    width: 100%;
+
+    .resend-prompt {
+      margin-bottom: 0.75rem;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    .resend-btn {
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 2rem;
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.875rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      border: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .spinner-border {
+        margin-right: 0.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s linear infinite;
+      }
+
+      &:hover {
+        background-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        background-color: #93c5fd;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    .secondary-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+
+      @media (max-width: 540px) {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+      }
+
+      button {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        flex: 1;
+        min-width: 120px;
+
+        &.btn-outline-secondary {
+          border: 1px solid #d1d5db;
+          color: #4b5563;
+          background-color: transparent;
+
+          &:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+          }
+        }
+
+        &.btn-link {
+          color: #6b7280;
+          text-decoration: none;
+
+          &:hover {
+            color: #4b5563;
+            background-color: #f9fafb;
+          }
+        }
+      }
+    }
+  }
+
+  .limited-access-note {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 2rem;
+    font-style: italic;
+    padding: 0.75rem 1rem;
+    border-top: 1px dashed #e5e7eb;
+    width: 100%;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes check-bounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+// Confetti animation
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+.c1 {
+  background-color: #3b82f6; // blue
+  transform: rotate(45deg);
+}
+
+.c2 {
+  background-color: #10b981; // green
+  border-radius: 50%;
+}
+
+.c3 {
+  background-color: #f59e0b; // amber
+  transform: rotate(60deg);
+  width: 12px;
+  height: 6px;
+}
+
+// Generate different starting positions and delays for confetti
+@for $i from 1 through 20 {
+  .confetti:nth-child(#{$i}) {
+    left: #{random(100)}#{"%"};
+    top: -20px;
+    animation-delay: #{($i - 1) * 0.1}s;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(90vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+// Button states
+.btn {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+  }
+
+  &:focus:not(:active)::after {
+    animation: ripple 0.6s ease-out;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0) translate(-50%, -50%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20) translate(-50%, -50%);
+    opacity: 0;
+  }
+}
