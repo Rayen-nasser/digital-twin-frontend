@@ -144,7 +144,7 @@ export class RegisterComponent {
           console.log('Response:', data || 'No response body');
           this.spinner.hide();
           this.isLoading = false;
-
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
           // Move to verification instructions screen
           this.step = 2;
         },
