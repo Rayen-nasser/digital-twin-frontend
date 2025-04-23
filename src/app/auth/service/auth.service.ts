@@ -149,24 +149,14 @@ export class AuthService {
   }
 
   // Email verification with request deduplication
-  emailVerification(token: string): Observable<any> {
-    console.log('Email verification requested for token:', token);
-
-    // Check if this verification is already in progress
-    if (this.pendingVerifications.has(token)) {
-      console.log('Reusing existing verification request for token');
-      return this.pendingVerifications.get(token)!;
-    }
-
-    return this.httpClient.post(`${this.apiUrl}/verify-email/`, { token: token });
+  emailVerification(token: any) {
+    return this.httpClient.post(`${this.apiUrl}/verify-email/`, { token }).toPromise();
   }
+
+
 
   setAuthenticated(value: boolean): void {
     this.isAuthenticated.next(value);
-  }
-
-  getAuthStatus(): Observable<boolean> {
-    return this.isAuthenticated.asObservable();
   }
 
   // Resend verification email
