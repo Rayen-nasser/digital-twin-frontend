@@ -118,14 +118,15 @@
       <p class="error-message">{{ errorMessage }}</p>
 
       <div class="error-actions">
-        <button (click)="resendVerification()" class="btn btn-primary resend-btn">
-          <div *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
+        <button (click)="resendVerification()"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+          [disabled]="loading">
+          <div *ngIf="loading" class="inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
           Resend Verification Email
         </button>
 
-        <button (click)="goHome()" class="btn btn-outline-secondary">
+        <button (click)="goHome()"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
           Continue Browsing
         </button>
       </div>

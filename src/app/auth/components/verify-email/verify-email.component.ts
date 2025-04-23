@@ -5,12 +5,12 @@ import { AuthService } from '../../service/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { timer } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { first, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-verify-email',
   templateUrl: './verify-email.component.html',
-  styleUrls: ['./verify-email.component.scss']
+  styleUrls: ['./verify-email.component.scss'],
 })
 export class VerifyEmailComponent implements OnInit {
   loading = true;
@@ -27,6 +27,10 @@ export class VerifyEmailComponent implements OnInit {
   pendingVerification = false;
   userEmail = '';
 
+  // Static flag to prevent duplicate verification attempts
+  // This ensures verification happens only once even if ngOnInit is called multiple times
+  static verificationAttempted = false;
+
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
@@ -36,45 +40,64 @@ export class VerifyEmailComponent implements OnInit {
     private spinner: NgxSpinnerService
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.spinner.hide();
     const token = this.route.snapshot.queryParamMap.get('token');
 
-    // If no token, show pending verification instructions
+    // If no token, show pending verification
     if (!token) {
       this.loading = false;
       this.pendingVerification = true;
-      this.userEmail = localStorage.getItem('pending_verification_email') || '';
+
+      if (typeof window !== 'undefined') {
+        this.userEmail = localStorage.getItem('pending_verification_email') || '';
+      }
       return;
     }
 
-    try {
-      const res: any = await this.authService.emailVerification(token);
-
-      if (res.access && res.refresh) {
-        sessionStorage.setItem('access_token', res.access);
-        localStorage.setItem('refresh_token', res.refresh);
-        this.authService.setAuthenticated(true);
-      }
-
-      if (res.user) {
-        localStorage.setItem('user_profile', JSON.stringify(res.user));
-      }
-
-      // Clear pending verification email from storage
-      localStorage.removeItem('pending_verification_email');
-
+    // Check if verification was already attempted with this token
+    // Using static class property to ensure it persists even if component is recreated
+    if (VerifyEmailComponent.verificationAttempted) {
       this.loading = false;
-      this.success = true;
-      this.showConfetti = true;
-      this.toastr.success('Your email has been successfully verified!', 'Success');
-
-      // Start countdown for redirect
-      this.startRedirectCountdown();
-    } catch (err: any) {
-      const message = err.error?.message || 'Verification failed. The link may be invalid or expired.';
-      this.setError(message);
+      return;
     }
+
+    // Mark that verification has been attempted for this token
+    VerifyEmailComponent.verificationAttempted = true;
+
+    // Proceed with verification
+    this.verifyEmail(token);
+  }
+
+  verifyEmail(token: string) {
+    // Actual verification logic moved to separate method
+    this.authService.emailVerification(token)
+      .then((res: any) => {
+        if (typeof window !== 'undefined') {
+          if (res.tokens.access && res.tokens.refresh) {
+            sessionStorage.setItem('access_token', res.tokens.access);
+            localStorage.setItem('refresh_token', res.tokens.refresh);
+            this.authService.setAuthenticated(true);
+          }
+
+          localStorage.removeItem('pending_verification_email');
+          this.startRedirectCountdown();
+        }
+
+        this.loading = false;
+        this.success = true;
+        this.showConfetti = true;
+        // this.toastr.success(
+        //   res.message,
+        //   'Success'
+        // );
+      })
+      .catch((err: any) => {
+        const message =
+          err.error?.message ||
+          'Verification failed. The link may be invalid or expired.';
+        this.setError(message);
+      });
   }
 
   setError(message: string) {
@@ -89,22 +112,29 @@ export class VerifyEmailComponent implements OnInit {
   }
 
   goDashboard() {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/home']);
   }
 
   async resendVerification() {
     this.loading = true;
 
     try {
-      const userEmail = localStorage.getItem('pending_verification_email') || this.userEmail;
+      const userEmail =
+        localStorage.getItem('pending_verification_email') || this.userEmail;
       if (!userEmail) {
         this.loading = false;
-        this.toastr.error('No email found. Please return to registration', 'Error');
+        this.toastr.error(
+          'No email found. Please return to registration',
+          'Error'
+        );
         return;
       }
 
       await this.authService.resendVerificationEmail(userEmail);
-      this.toastr.success('A new verification email has been sent', 'Email Sent');
+      this.toastr.success(
+        'A new verification email has been sent',
+        'Email Sent'
+      );
       this.loading = false;
 
       // If we're on the pending page, show confirmation
@@ -112,7 +142,8 @@ export class VerifyEmailComponent implements OnInit {
         this.userEmail = userEmail;
       }
     } catch (err: any) {
-      const message = err.error?.message || 'Failed to resend verification email';
+      const message =
+        err.error?.message || 'Failed to resend verification email';
       this.toastr.error(message, 'Error');
       this.loading = false;
     }
@@ -122,10 +153,10 @@ export class VerifyEmailComponent implements OnInit {
   startRedirectCountdown() {
     timer(0, 1000)
       .pipe(take(this.redirectSeconds + 1))
-      .subscribe(count => {
+      .subscribe((count) => {
         this.redirectCountdown = this.redirectSeconds - count;
         if (count === this.redirectSeconds) {
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/home']);
         }
       });
   }
