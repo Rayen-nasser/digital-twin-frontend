@@ -7,14 +7,14 @@ import { NavigationEnd, Router } from '@angular/router';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'e-learning';
+  title = 'Digital Twin';
   showHeaderFooter: boolean = false;
 
   constructor(private router: Router) {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const urlAfterRedirects = event.urlAfterRedirects || '';
-        this.showHeaderFooter = !['/auth/login', '/auth/register'].includes(urlAfterRedirects) ;
+        this.showHeaderFooter = !urlAfterRedirects.startsWith('/auth/');
       }
     });
   }
