@@ -7,7 +7,7 @@ import {
   ElementRef,
   OnDestroy,
   ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
@@ -19,7 +19,7 @@ import { User } from '../../../interfaces/user.interface';
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
@@ -46,18 +46,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isLoggedIn = this.authService.isLoggedIn()
+    this.isLoggedIn = this.authService.isLoggedIn();
     this.isDarkMode = this.themeService.isDarkMode();
 
-    this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
+    this.themeSubscription = this.themeService.darkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
       this.cdr.detectChanges();
     });
 
-    this.isHomePage = this.router.url === '/' || this.router.url.startsWith('/#');
+    this.isHomePage =
+      this.router.url === '/' || this.router.url.startsWith('/#');
 
     this.routerSubscription = this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+      .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: any) => {
         this.isHomePage = event.url === '/' || event.url.startsWith('/#');
         this.showMobileMenu = false;
@@ -71,15 +72,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-    this.isScrolled = window.scrollY > this.scrollThreshold;
+    if (typeof window !== 'undefined') {
+      this.isScrolled = window.scrollY > this.scrollThreshold;
 
-    if (this.isHomePage) {
-      this.checkActiveSection();
+      // get user profile from localstorage
+      const userProfile = localStorage.getItem('user_profile');
+      this.user = userProfile ? JSON.parse(userProfile) : null;
     }
 
-    // get user profile from localstorage
-    const userProfile = localStorage.getItem('user_profile');
-    this.user = userProfile ? JSON.parse(userProfile) : null;
+    if (this.isHomePage && typeof window !== 'undefined') {
+      this.checkActiveSection();
+    }
   }
 
   ngOnDestroy(): void {
@@ -90,16 +93,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event): void {
-    if (this.showDropdown && this.profileDropdown && !this.profileDropdown.nativeElement.contains(event.target)) {
+    if (
+      this.showDropdown &&
+      this.profileDropdown &&
+      !this.profileDropdown.nativeElement.contains(event.target)
+    ) {
       this.showDropdown = false;
     }
   }
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.isScrolled = window.scrollY > this.scrollThreshold;
-    if (this.isHomePage) {
-      this.checkActiveSection();
+    if (typeof window !== 'undefined') {
+      this.isScrolled = window.scrollY > this.scrollThreshold;
+      if (this.isHomePage) {
+        this.checkActiveSection();
+      }
     }
   }
 
@@ -134,7 +143,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.router.navigate([], {
           fragment: sectionId,
           replaceUrl: true,
-          queryParamsHandling: 'preserve'
+          queryParamsHandling: 'preserve',
         });
         this.cdr.detectChanges();
       }
@@ -189,7 +198,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.isLoggedIn = false;
         this.user = null;
         this.cdr.detectChanges();
-      }
+      },
     });
   }
 }
