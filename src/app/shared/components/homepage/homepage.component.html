@@ -172,317 +172,170 @@
   </section>
 
   <!-- Services Section - IMPROVED TWIN CARDS -->
-  <section id="services" class="py-16 bg-gray-50 dark:bg-gray-800/50">
-    <div class="container mx-auto px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-          Our Digital Twin Services
-        </h2>
-        <div
-          class="w-20 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mx-auto mt-4 mb-8"
-        ></div>
-        <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Explore our range of specialized AI companions designed to assist you
-          in various aspects of life.
-        </p>
-      </div>
-
-      <!-- IMPROVED TWIN CARDS: More compact, focused design -->
+  <!-- Services Section - IMPROVED TWIN CARDS -->
+<section id="services" class="py-16 bg-gray-50 dark:bg-gray-800/50">
+  <div class="container mx-auto px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
+        Our Digital Twin Services
+      </h2>
       <div
-        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+        class="w-20 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mx-auto mt-4 mb-8"
+      ></div>
+      <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Explore our range of specialized AI companions designed to assist you
+        in various aspects of life.
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center py-12">
+      <div class="animate-bounce flex space-x-2">
+        <div class="w-3 h-3 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+        <div class="w-3 h-3 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce-delay-200"></div>
+        <div class="w-3 h-3 bg-purple-600 dark:bg-purple-400 rounded-full animate-bounce-delay-400"></div>
+      </div>
+    </div>
+
+    <!-- No Results State -->
+    <div *ngIf="!isLoading && twins.length === 0" class="text-center py-12">
+      <div class="text-gray-500 dark:text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-lg font-medium">No digital twins found</p>
+        <p class="mt-2">Try adjusting your search or create a new digital twin.</p>
+      </div>
+    </div>
+
+    <!-- IMPROVED TWIN CARDS: More compact, focused design -->
+    <div
+      *ngIf="!isLoading && twins.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+    >
+      <!-- Twin Card -->
+      <div
+        *ngFor="let twin of twins"
+        class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col h-full"
       >
-        <!-- Twin Card 1 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900"
-            >
-              <img
-                src=""
-                alt="Doctor AI"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Doctor AI
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Health advice and wellness guidance
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/doctor"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
+        <div class="relative pt-4 pb-2 px-2 flex justify-center">
+          <div
+            class="w-20 h-20 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900"
+          >
+            <img
+              [src]="twin.avatar_url || 'assets/default-avatar.png'"
+              [alt]="twin.name"
+              class="object-cover w-full h-full"
+              loading="lazy"
+              onerror="this.src='assets/default-avatar.png'"
+            />
           </div>
         </div>
-
-        <!-- Twin Card 2 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-green-100 dark:border-green-900"
-            >
-              <img
-                src=""
-                alt="Fitness Coach"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Fitness Coach
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Workouts and nutrition advice
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/fitness"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
+        <div class="p-3 text-center flex-grow">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white truncate">
+            {{ twin.name }}
+          </h3>
+          <p
+            class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2 h-8"
+          >
+            {{ twin.description || "No description available" }}
+          </p>
         </div>
+        <div class="px-3 pb-3 flex justify-center">
+          <button
+            [routerLink]="['/twin', twin.slug || twin.id]"
+            class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
+          >
+            Start Chat
+          </button>
 
-        <!-- Twin Card 3 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-purple-100 dark:border-purple-900"
-            >
-              <img
-                src=""
-                alt="Teacher AI"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Teacher AI
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Personalized learning and tutoring
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/teacher"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
-        </div>
-
-        <!-- Twin Card 4 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-yellow-100 dark:border-yellow-900"
-            >
-              <img
-                src=""
-                alt="Financial Advisor"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Financial Advisor
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Budgeting and investment guidance
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/finance"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
-        </div>
-
-        <!-- Twin Card 5 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-red-100 dark:border-red-900"
-            >
-              <img
-                src=""
-                alt="Life Coach"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Life Coach
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Personal development and goal setting
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/coach"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
-        </div>
-
-        <!-- Twin Card 6 -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-100 dark:border-pink-900"
-            >
-              <img
-                src=""
-                alt="Therapist AI"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Therapist AI
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Emotional support and guidance
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/therapist"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
-        </div>
-
-        <!-- Twin Card 7 - Added a new twin -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-teal-100 dark:border-teal-900"
-            >
-              <img
-                src=""
-                alt="Career Coach"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Career Coach
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Career advice and interview prep
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/career"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
-        </div>
-
-        <!-- Twin Card 8 - Added a new twin -->
-        <div
-          class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-105 duration-300 flex flex-col"
-        >
-          <div class="relative pt-4 pb-2 px-2 flex justify-center">
-            <div
-              class="w-20 h-20 rounded-full overflow-hidden border-4 border-amber-100 dark:border-amber-900"
-            >
-              <img
-                src=""
-                alt="Nutrition Coach"
-                class="object-cover w-full h-full"
-              />
-            </div>
-          </div>
-          <div class="p-3 text-center flex-grow">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-              Nutrition Coach
-            </h3>
-            <p
-              class="text-xs text-gray-600 dark:text-gray-300 mt-1 mb-3 line-clamp-2"
-            >
-              Diet plans and healthy eating tips
-            </p>
-          </div>
-          <div class="px-3 pb-3 flex justify-center">
-            <button
-              routerLink="/twin/nutrition"
-              class="w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-md text-sm font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
-            >
-              Start Chat
-            </button>
-          </div>
         </div>
       </div>
+    </div>
 
-      <!-- View All Twins Button -->
-      <div class="mt-10 text-center">
+    <!-- Pagination Controls -->
+    <div *ngIf="totalPages > 1" class="mt-8 flex justify-center">
+      <!-- Mobile Pagination -->
+      <div class="flex sm:hidden space-x-3">
         <button
-          routerLink="/twins"
-          class="px-6 py-3 border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-lg font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+          [disabled]="page === 1"
+          (click)="changePage(page - 1)"
+          class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200 disabled:opacity-50"
         >
-          View All Digital Twins
+          Prev
+        </button>
+        <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-500 dark:border-blue-600 rounded-md text-blue-600 dark:text-blue-400">
+          {{ page }} / {{ totalPages }}
+        </span>
+        <button
+          [disabled]="page === totalPages"
+          (click)="changePage(page + 1)"
+          class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
+      <!-- Desktop Pagination -->
+      <div class="hidden sm:flex items-center space-x-1">
+        <button
+          [disabled]="page === 1"
+          (click)="changePage(page - 1)"
+          class="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-md text-gray-700 dark:text-gray-200 disabled:opacity-50 flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <ng-container *ngFor="let pageNum of displayPages">
+          <button
+          *ngIf="pageNum !== '...'"
+          (click)="changePage(+pageNum)"
+          [class.bg-blue-50]="pageNum === page"
+          [class.dark:bg-blue-900]="pageNum === page"
+          [class.text-blue-600]="pageNum === page"
+          [class.dark:text-blue-400]="pageNum === page"
+          [class.border-blue-500]="pageNum === page"
+          class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">
+          {{ pageNum }}
+        </button>
+          <span
+            *ngIf="pageNum === '...'"
+            class="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
+          >
+            ...
+          </span>
+        </ng-container>
+
+        <button
+          [disabled]="page === totalPages"
+          (click)="changePage(page + 1)"
+          class="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-r-md text-gray-700 dark:text-gray-200 disabled:opacity-50 flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>
-  </section>
+
+    <!-- Results Summary -->
+    <div *ngIf="twinsCount > 0" class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      Showing {{ (page - 1) * page_size + 1 }}-{{ Math.min(page * page_size, twinsCount) }} of {{ twinsCount }} digital twins
+    </div>
+
+    <!-- View All Twins Button (only visible when not showing all) -->
+    <div *ngIf="twinsCount > 8" class="mt-10 text-center">
+      <button
+        routerLink="/twins"
+        class="px-6 py-3 border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-lg font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+      >
+        View All Digital Twins
+      </button>
+    </div>
+  </div>
+</section>
 
   <!-- About Section - Improved for better UX -->
   <section id="contact" class="py-16 bg-gray-50 dark:bg-gray-800/50">
@@ -719,17 +572,6 @@
           </form>
         </div>
       </div>
-
-      <!-- Map -->
-      <!-- <div class="mt-12 max-w-4xl mx-auto">
-        <div class="bg-white dark:bg-gray-700 rounded-xl shadow-md overflow-hidden h-64">
-          <img
-            src=""
-            alt="Map Location"
-            class="w-full h-full object-cover"
-          />
-        </div>
-      </div> -->
 
       <!-- FAQ Section -->
       <div class="mt-16 max-w-3xl mx-auto">
