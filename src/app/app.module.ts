@@ -12,6 +12,7 @@ import { SharedModule } from './shared/shared.module';
 import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core.module';
 import { AuthService } from './auth/service/auth.service';
+import { TwinModule } from './twin/twin.module';
 
 
 export function initializeApp(authService: AuthService) {
@@ -32,7 +33,8 @@ export function initializeApp(authService: AuthService) {
     RouterModule.forRoot([]),
     AuthModule,
     SharedModule,
-    CoreModule
+    CoreModule,
+    TwinModule
   ],
   providers: [
     provideClientHydration(),

@@ -20,7 +20,7 @@ export function initializeApp(authService: AuthService) {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      deps: [AuthService],
+      // deps: [AuthService],
       multi: true
     },
     {

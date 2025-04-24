@@ -1,5 +1,5 @@
 <!-- app.component.html -->
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
   <!-- Header -->
   <app-header *ngIf="showHeaderFooter"></app-header>
 
@@ -12,9 +12,11 @@
     [fullScreen]="true"
   ><p style="color: white">Loading...</p></ngx-spinner>
 
+  <!-- Main Content Area -->
+  <div class="flex-grow">
+    <router-outlet></router-outlet>
+  </div>
 
-  <router-outlet></router-outlet>
-  
   <!-- Footer -->
   <app-footer *ngIf="showHeaderFooter"></app-footer>
 </div>
