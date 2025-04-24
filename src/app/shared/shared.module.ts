@@ -22,7 +22,7 @@ import { HomePageComponent } from './components/homepage/homepage.component';
   exports:[
     HeaderComponent,
     FooterComponent,
-    HomePageComponent
+    HomePageComponent,
   ]
 })
 export class SharedModule { }
