@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { ListTwinComponent } from './components/list-twin/list-twin.component';
 import { DetailTwinComponent } from './components/detail-twin/detail-twin.component';
+import { SharedModule } from '../shared/shared.module';
 
 
 @NgModule({
@@ -20,6 +21,8 @@ import { DetailTwinComponent } from './components/detail-twin/detail-twin.compon
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
+    // Import the module where TwinFormBaseComponent is declared
+    SharedModule
   ],
 })
 export class TwinModule {}

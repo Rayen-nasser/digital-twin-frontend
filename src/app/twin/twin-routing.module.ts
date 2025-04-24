@@ -6,6 +6,8 @@ import { DetailTwinComponent } from './components/detail-twin/detail-twin.compon
 
 const routes: Routes = [
   { path: '', component: ListTwinComponent },
+  { path: 'mine', component: ListTwinComponent },
+  { path: 'public', component: ListTwinComponent },
   { path: 'create', component: CreateTwinComponent },
   { path: ':id', component: DetailTwinComponent}
 ];
