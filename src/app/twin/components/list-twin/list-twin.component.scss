@@ -51,9 +51,10 @@ $transition-slow: 350ms;
 .twins-container {
   width: 100%;
   max-width: 1200px;
-  margin:60px  auto;
+  margin: 60px auto;
   padding: $spacing-lg;
-  transition: background-color $transition-normal ease, color $transition-normal ease;
+  transition: background-color $transition-normal ease,
+    color $transition-normal ease;
 
   &.dark-theme {
     // background-color: $dark-background;
@@ -81,6 +82,7 @@ $transition-slow: 350ms;
 }
 
 // View selector tabs
+// View selector tabs
 .view-selector {
   display: flex;
   justify-content: space-between;
@@ -95,6 +97,12 @@ $transition-slow: 350ms;
     .dark-theme & {
       border-color: $dark-border-color;
     }
+  }
+
+  .view-actions {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
   }
 
   .tab-button {
@@ -129,8 +137,24 @@ $transition-slow: 350ms;
       }
     }
   }
-}
 
+  // Responsive styles
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .tabs-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: $spacing-md;
+    }
+
+    .view-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+}
 // Filter panel
 .filter-panel {
   background-color: $card-background;
@@ -140,19 +164,21 @@ $transition-slow: 350ms;
   box-shadow: $box-shadow;
   overflow: hidden;
   transition: background-color $transition-normal ease,
-              border $transition-normal ease,
-              box-shadow $transition-normal ease;
+    border $transition-normal ease, box-shadow $transition-normal ease;
 
-  &.ng-enter, &.ng-leave {
+  &.ng-enter,
+  &.ng-leave {
     transition: all $transition-normal ease-in-out;
   }
 
-  &.ng-enter, &.ng-leave.ng-leave-active {
+  &.ng-enter,
+  &.ng-leave.ng-leave-active {
     opacity: 0;
     max-height: 0;
   }
 
-  &.ng-leave, &.ng-enter.ng-enter-active {
+  &.ng-leave,
+  &.ng-enter.ng-enter-active {
     opacity: 1;
     max-height: 300px;
   }
@@ -188,7 +214,8 @@ $transition-slow: 350ms;
       }
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: $spacing-sm $spacing-md;
       border: 1px solid $border-color;
@@ -196,9 +223,8 @@ $transition-slow: 350ms;
       background-color: white;
       font-size: 14px;
       transition: background-color $transition-normal ease,
-                  border-color $transition-normal ease,
-                  color $transition-normal ease,
-                  box-shadow $transition-normal ease;
+        border-color $transition-normal ease, color $transition-normal ease,
+        box-shadow $transition-normal ease;
 
       &:focus {
         outline: none;
@@ -302,7 +328,9 @@ $transition-slow: 350ms;
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   p {
@@ -417,10 +445,8 @@ $transition-slow: 350ms;
   overflow: hidden;
   box-shadow: $box-shadow;
   transition: transform $transition-normal ease,
-              box-shadow $transition-normal ease,
-              background-color $transition-normal ease,
-              border $transition-normal ease,
-              opacity $transition-normal ease;
+    box-shadow $transition-normal ease, background-color $transition-normal ease,
+    border $transition-normal ease, opacity $transition-normal ease;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -508,7 +534,8 @@ $transition-slow: 350ms;
         gap: $spacing-xs;
         flex-wrap: wrap;
 
-        .status-badge, .privacy-badge {
+        .status-badge,
+        .privacy-badge {
           display: inline-block;
           padding: 2px 6px;
           border-radius: 10px;
@@ -615,7 +642,7 @@ $transition-slow: 350ms;
     gap: $spacing-sm;
     border-top: 1px solid $border-color;
     transition: background-color $transition-normal ease,
-                border-color $transition-normal ease;
+      border-color $transition-normal ease;
 
     .dark-theme & {
       background-color: rgba($dark-background, 0.3);
@@ -625,7 +652,11 @@ $transition-slow: 350ms;
 }
 
 // Buttons
-.primary-button, .secondary-button, .text-button, .icon-button, .page-button {
+.primary-button,
+.secondary-button,
+.text-button,
+.icon-button,
+.page-button {
   cursor: pointer;
   font-weight: 500;
   border: none;
@@ -662,8 +693,7 @@ $transition-slow: 350ms;
   border: 1px solid $primary-color;
   color: $primary-color;
   transition: background-color $transition-normal ease,
-              border-color $transition-normal ease,
-              color $transition-normal ease;
+    border-color $transition-normal ease, color $transition-normal ease;
 
   &:hover:not(:disabled) {
     background-color: rgba($primary-color, 0.1);
@@ -706,7 +736,8 @@ $transition-slow: 350ms;
   width: 32px;
   height: 32px;
   padding: 0;
-  transition: background-color $transition-normal ease, color $transition-normal ease;
+  transition: background-color $transition-normal ease,
+    color $transition-normal ease;
 
   &:hover:not(:disabled) {
     background-color: rgba($background-color, 0.8);
@@ -776,7 +807,8 @@ $transition-slow: 350ms;
     padding: 0;
     background-color: transparent;
     color: $text-color;
-    transition: background-color $transition-normal ease, color $transition-normal ease;
+    transition: background-color $transition-normal ease,
+      color $transition-normal ease;
 
     &:hover:not(:disabled) {
       background-color: rgba($primary-color, 0.1);
@@ -825,11 +857,23 @@ $transition-slow: 350ms;
 
 // Animations for filter panel
 @keyframes slideDown {
-  from { max-height: 0; opacity: 0; }
-  to { max-height: 300px; opacity: 1; }
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 300px;
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { max-height: 300px; opacity: 1; }
-  to { max-height: 0; opacity: 0; }
+  from {
+    max-height: 300px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
 }

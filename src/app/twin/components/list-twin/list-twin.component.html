@@ -1,39 +1,42 @@
 <div class="twins-container" [class.dark-theme]="isDarkMode">
-  <!-- Header section with title and primary actions -->
-  <div class="page-header">
-    <h1 class="page-title">Digital Twins</h1>
-    <button class="primary-button create-button" (click)="createNewTwin()">
-      <i class="fa fa-plus"></i> Create Twin
-    </button>
-  </div>
-
   <!-- View selector tabs -->
   <div class="view-selector">
     <div class="tabs-container">
       <button
         class="tab-button"
         [class.active]="selectedViewMode === 'all'"
-        (click)="setViewMode('all')">
+        (click)="setViewMode('all')"
+      >
         All Twins
       </button>
       <button
         class="tab-button"
         [class.active]="selectedViewMode === 'mine'"
-        (click)="setViewMode('mine')">
+        (click)="setViewMode('mine')"
+      >
         My Twins
       </button>
       <button
         class="tab-button"
         [class.active]="selectedViewMode === 'public'"
-        (click)="setViewMode('public')">
+        (click)="setViewMode('public')"
+      >
         Public Twins
       </button>
     </div>
 
-    <button class="secondary-button filter-toggle" (click)="toggleFilters()">
-      <i class="fa" [ngClass]="showFilters ? 'fa-filter-slash' : 'fa-filter'"></i>
-      {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-    </button>
+    <div class="view-actions">
+      <button class="secondary-button filter-toggle" (click)="toggleFilters()">
+        <i
+          class="fa"
+          [ngClass]="showFilters ? 'fa-filter-slash' : 'fa-filter'"
+        ></i>
+        {{ showFilters ? "Hide Filters" : "Show Filters" }}
+      </button>
+      <button class="primary-button create-button" (click)="createNewTwin()">
+        <i class="fa fa-plus"></i> Create Twin
+      </button>
+    </div>
   </div>
 
   <!-- Filter panel with improved layout -->
@@ -49,11 +52,13 @@
               id="search"
               formControlName="search"
               placeholder="Search by name or description..."
-              autocomplete="off">
+              autocomplete="off"
+            />
             <button
               *ngIf="filterForm.get('search')?.value"
               class="clear-search"
-              (click)="clearSearch()">
+              (click)="clearSearch()"
+            >
               <i class="fa fa-times"></i>
             </button>
           </div>
@@ -62,7 +67,10 @@
         <div class="filter-field">
           <label for="privacy">Privacy</label>
           <select id="privacy" formControlName="privacy_setting">
-            <option *ngFor="let option of privacyOptions" [value]="option.value">
+            <option
+              *ngFor="let option of privacyOptions"
+              [value]="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -111,37 +119,59 @@
       <div class="error-message">
         <i class="fa fa-exclamation-circle"></i>
         <p>{{ error }}</p>
-        <button class="secondary-button" (click)="loadTwins()">Try Again</button>
+        <button class="secondary-button" (click)="loadTwins()">
+          Try Again
+        </button>
       </div>
     </div>
 
     <!-- Empty state with context-specific messaging -->
-    <div *ngIf="!isLoading && !error && twins.length === 0" class="empty-container">
+    <div
+      *ngIf="!isLoading && !error && twins.length === 0"
+      class="empty-container"
+    >
       <div class="empty-message">
         <i class="fa fa-robot"></i>
         <h3>No twins found</h3>
         <p *ngIf="selectedViewMode === 'all' && hasActiveFilters()">
-          There are no twins matching your filters. Try adjusting your search criteria.
+          There are no twins matching your filters. Try adjusting your search
+          criteria.
         </p>
         <p *ngIf="selectedViewMode === 'all' && !hasActiveFilters()">
-          No twins have been created yet. Get started by creating your first twin.
+          No twins have been created yet. Get started by creating your first
+          twin.
         </p>
         <p *ngIf="selectedViewMode === 'mine'">
-          You haven't created any twins yet. Get started by creating your first digital twin.
+          You haven't created any twins yet. Get started by creating your first
+          digital twin.
         </p>
         <p *ngIf="selectedViewMode === 'public'">
-          There are no public twins available at this time. Check back later or create your own!
+          There are no public twins available at this time. Check back later or
+          create your own!
         </p>
-        <button class="primary-button" (click)="createNewTwin()">Create New Twin</button>
+        <button class="primary-button" (click)="createNewTwin()">
+          Create New Twin
+        </button>
       </div>
     </div>
 
     <!-- Twins grid with improved cards -->
     <div *ngIf="!isLoading && !error && twins.length > 0" class="twins-grid">
-      <div *ngFor="let twin of twins" class="twin-card" [class.inactive]="!twin.is_active">
+      <div
+        *ngFor="let twin of twins"
+        class="twin-card"
+        [class.inactive]="!twin.is_active"
+      >
         <div class="card-content" (click)="navigateToTwin(twin.id)">
           <div class="card-header">
-            <div class="twin-avatar" [ngStyle]="{'background-image': twin.avatar_url ? 'url(' + twin.avatar_url + ')' : 'none'}">
+            <div
+              class="twin-avatar"
+              [ngStyle]="{
+                'background-image': twin.avatar_url
+                  ? 'url(' + twin.avatar_url + ')'
+                  : 'none'
+              }"
+            >
               <div *ngIf="!twin.avatar_url" class="avatar-placeholder">
                 {{ twin.name.charAt(0).toUpperCase() }}
               </div>
@@ -150,7 +180,7 @@
               <h3 class="twin-name" [title]="twin.name">{{ twin.name }}</h3>
               <div class="twin-badges">
                 <span class="status-badge" [class.active]="twin.is_active">
-                  {{ twin.is_active ? 'Active' : 'Inactive' }}
+                  {{ twin.is_active ? "Active" : "Inactive" }}
                 </span>
                 <span class="privacy-badge" [ngClass]="twin.privacy_setting">
                   {{ twin.privacy_setting | titlecase }}
@@ -160,8 +190,12 @@
           </div>
 
           <div class="twin-info">
-            <p class="twin-description" *ngIf="twin.description">{{ twin.description }}</p>
-            <p class="twin-description empty" *ngIf="!twin.description">No description provided</p>
+            <p class="twin-description" *ngIf="twin.description">
+              {{ twin.description }}
+            </p>
+            <p class="twin-description empty" *ngIf="!twin.description">
+              No description provided
+            </p>
           </div>
 
           <div class="twin-metadata">
@@ -169,7 +203,7 @@
               By {{ twin.owner.display_name || twin.owner.username }}
             </span>
             <span class="created-date">
-              Created {{ twin.created_at | date:'mediumDate' }}
+              Created {{ twin.created_at | date : "mediumDate" }}
             </span>
           </div>
         </div>
@@ -179,21 +213,27 @@
             class="icon-button"
             [class.active]="twin.is_active"
             [title]="twin.is_active ? 'Deactivate twin' : 'Activate twin'"
-            (click)="toggleTwinActive(twin, $event)">
-            <i class="fa" [ngClass]="twin.is_active ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+            (click)="toggleTwinActive(twin, $event)"
+          >
+            <i
+              class="fa"
+              [ngClass]="twin.is_active ? 'fa-toggle-on' : 'fa-toggle-off'"
+            ></i>
           </button>
 
           <button
             class="icon-button"
             title="Duplicate twin"
-            (click)="duplicateTwin(twin, $event)">
+            (click)="duplicateTwin(twin, $event)"
+          >
             <i class="fa fa-copy"></i>
           </button>
 
           <button
             class="icon-button delete"
             title="Delete twin"
-            (click)="deleteTwin(twin, $event)">
+            (click)="deleteTwin(twin, $event)"
+          >
             <i class="fa fa-trash"></i>
           </button>
         </div>
@@ -201,13 +241,17 @@
     </div>
 
     <!-- Enhanced pagination -->
-    <div *ngIf="!isLoading && !error && totalTwins > pageSize" class="pagination-container">
+    <div
+      *ngIf="!isLoading && !error && totalTwins > pageSize"
+      class="pagination-container"
+    >
       <div class="pagination-controls">
         <button
           class="page-button"
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
-          title="First page">
+          title="First page"
+        >
           <i class="fa fa-angle-double-left"></i>
         </button>
 
@@ -215,7 +259,8 @@
           class="page-button"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
-          title="Previous page">
+          title="Previous page"
+        >
           <i class="fa fa-angle-left"></i>
         </button>
 
@@ -226,8 +271,9 @@
             [class.active]="page === currentPage"
             [class.ellipsis]="page < 0"
             [disabled]="page < 0"
-            (click)="page > 0 && onPageChange(page)">
-            {{ page > 0 ? page : '...' }}
+            (click)="page > 0 && onPageChange(page)"
+          >
+            {{ page > 0 ? page : "..." }}
           </button>
         </div>
 
@@ -235,7 +281,8 @@
           class="page-button"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
-          title="Next page">
+          title="Next page"
+        >
           <i class="fa fa-angle-right"></i>
         </button>
 
@@ -243,7 +290,8 @@
           class="page-button"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
-          title="Last page">
+          title="Last page"
+        >
           <i class="fa fa-angle-double-right"></i>
         </button>
       </div>

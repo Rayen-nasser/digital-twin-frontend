@@ -331,7 +331,7 @@ export class ListTwinComponent implements OnInit, OnDestroy {
           `Successfully created a copy of ${twin.name}`
         );
         // Navigate to the new twin
-        this.router.navigate(['/twins', response.id]);
+        this.router.navigate(['/twin', response.id]);
       },
       error: (err: any) => {
         console.error('Error duplicating twin:', err);
