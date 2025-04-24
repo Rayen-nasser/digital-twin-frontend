@@ -1,0 +1,726 @@
+<div
+  class="container mx-auto px-4 py-16 max-w-4xl"
+  [class.dark-theme]="isDarkMode"
+>
+  <!-- Loading State -->
+  <div
+    *ngIf="isLoading"
+    class="flex flex-col items-center justify-center py-16"
+  >
+    <div class="spinner"></div>
+    <p class="mt-4 text-gray-600 dark:text-gray-300">Loading twin details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="bg-red-50 dark:bg-red-900 p-6 rounded-lg shadow">
+    <div class="flex items-center text-red-700 dark:text-red-300">
+      <i class="fa fa-exclamation-circle text-2xl mr-3"></i>
+      <p>{{ error }}</p>
+    </div>
+    <div class="mt-4 flex justify-center">
+      <button
+        (click)="loadTwinDetails()"
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+      >
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Twin Detail Content -->
+  <div *ngIf="!isLoading && !error && twin">
+    <!-- Header with Actions -->
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+    >
+      <div class="flex items-center">
+        <button
+          (click)="goBack()"
+          class="mr-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+          title="Back to list"
+        >
+          <i class="fa fa-arrow-left text-lg"></i>
+        </button>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          {{ isEditMode ? "Edit" : "View" }} Twin: {{ twin.name }}
+        </h1>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
+        <button
+          *ngIf="!isEditMode"
+          (click)="chatWithTwin()"
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <i class="fa fa-comments mr-2"></i> Chat with Twin
+        </button>
+
+        <button
+          *ngIf="!isEditMode"
+          (click)="toggleEditMode()"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <i class="fa fa-edit mr-2"></i> Edit Twin
+        </button>
+
+        <button
+          *ngIf="isEditMode"
+          (click)="saveChanges()"
+          [disabled]="isSaving"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
+        >
+          <i *ngIf="!isSaving" class="fa fa-save mr-2"></i>
+          <span *ngIf="isSaving" class="spinner-small mr-2"></span>
+          {{ isSaving ? "Saving..." : "Save Changes" }}
+        </button>
+
+        <button
+          *ngIf="isEditMode"
+          (click)="toggleEditMode()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- Twin Status Badge -->
+    <div class="mb-6 flex flex-wrap items-center gap-4">
+      <span
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+        [ngClass]="{
+          'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
+            twin.is_active,
+          'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
+            !twin.is_active
+        }"
+      >
+        {{ twin.is_active ? "Active" : "Inactive" }}
+      </span>
+
+      <span
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+        [ngClass]="{
+          'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
+            twin.privacy_setting === 'public',
+          'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100':
+            twin.privacy_setting === 'private'
+        }"
+      >
+        {{ twin.privacy_setting | titlecase }}
+      </span>
+
+      <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">
+        Created: {{ twin.created_at | date : "medium" }}
+      </span>
+    </div>
+
+    <!-- Forms Area -->
+    <form [formGroup]="twinForm" class="space-y-8">
+      <!-- Basic Info Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+          Basic Information
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Name Field -->
+          <div>
+            <label
+              for="name"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              <span
+                class="text-lg font-medium text-gray-900 dark:text-gray-100"
+              >
+                Twin Name <span class="text-red-500">*</span>
+              </span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              [readonly]="!isEditMode"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
+            />
+            <div
+              *ngIf="
+                isEditMode &&
+                twinForm.get('name')?.touched &&
+                twinForm.get('name')?.invalid
+              "
+              class="text-red-500 dark:text-red-400 text-sm mt-1"
+            >
+              <span *ngIf="twinForm.get('name')?.errors?.['required']"
+                >Name is required</span
+              >
+              <span *ngIf="twinForm.get('name')?.errors?.['maxlength']"
+                >Name cannot exceed 100 characters</span
+              >
+            </div>
+          </div>
+
+          <!-- Privacy Setting -->
+          <div>
+            <label
+              for="privacy"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              <span
+                class="text-lg font-medium text-gray-900 dark:text-gray-100"
+              >
+                Privacy Setting <span class="text-red-500">*</span>
+              </span>
+            </label>
+            <select
+              id="privacy"
+              formControlName="privacy_setting"
+              [disabled]="!isEditMode"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
+            >
+              <option
+                *ngFor="let option of privacyOptions"
+                [value]="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Twin Status Toggle -->
+        <div class="mt-4 flex items-center" *ngIf="!isEditMode">
+          <label class="inline-flex items-center cursor-pointer">
+            <span
+              class="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Status:</span
+            >
+            <button
+              type="button"
+              class="relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              [class.bg-green-500]="twin.is_active"
+              [class.bg-gray-300]="!twin.is_active"
+              (click)="toggleActiveStatus()"
+            >
+              <span
+                class="inline-block h-4 w-4 transform bg-white rounded-full shadow transition-transform duration-200"
+                [class.translate-x-5]="twin.is_active"
+                [class.translate-x-0]="!twin.is_active"
+              ></span>
+            </button>
+            <span
+              class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              {{ twin.is_active ? "Active" : "Inactive" }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Avatar Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+          Avatar
+        </h2>
+
+        <div class="flex flex-col items-center">
+          <div *ngIf="imagePreview" class="relative mb-4">
+            <img
+              [src]="imagePreview"
+              alt="Avatar preview"
+              class="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+            />
+            <button
+              *ngIf="isEditMode"
+              type="button"
+              (click)="removeImage()"
+              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 focus:outline-none"
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+
+          <div *ngIf="!imagePreview && isEditMode" class="mb-4">
+            <label
+              for="avatar"
+              class="cursor-pointer flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400"
+            >
+              <i class="fa fa-plus text-3xl mb-2"></i>
+              <span class="text-sm">Upload Avatar</span>
+            </label>
+            <input
+              type="file"
+              id="avatar"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="hidden"
+            />
+          </div>
+
+          <div *ngIf="!imagePreview && !isEditMode" class="mb-4">
+            <div
+              class="flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+            >
+              <i class="fa fa-user text-4xl"></i>
+              <span class="text-xs mt-2">No Avatar</span>
+            </div>
+          </div>
+
+          <p
+            *ngIf="isEditMode"
+            class="text-gray-500 dark:text-gray-400 text-sm"
+          >
+            Upload a square image for best results. Will be resized to 500x500px
+            if larger.
+          </p>
+        </div>
+      </div>
+
+      <!-- Persona Section -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        formGroupName="persona_data"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+            Persona Description <span class="text-red-500">*</span>
+          </h2>
+          <div *ngIf="isEditMode" class="flex space-x-2">
+            <button
+              type="button"
+              (click)="toggleJsonUploadModal()"
+              class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              Import JSON
+            </button>
+
+            <button
+              type="button"
+              (click)="downloadPersonaJson()"
+              class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              [disabled]="
+                !personaData.get('persona_description')?.value &&
+                conversations.length === 0
+              "
+            >
+              Export JSON
+            </button>
+          </div>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+          The personality, knowledge, and characteristics of your digital twin.
+        </p>
+
+        <div class="mb-6">
+          <textarea
+            formControlName="persona_description"
+            rows="6"
+            [readonly]="!isEditMode"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
+          ></textarea>
+          <div class="flex justify-end">
+            <span
+              class="text-xs mt-1"
+              [ngClass]="{
+                'text-gray-500 dark:text-gray-400':
+                  personaData.get('persona_description')?.value?.length <=
+                  maxPersonaDescriptionLength * 0.9,
+                'text-red-500 dark:text-red-400':
+                  personaData.get('persona_description')?.value?.length >
+                  maxPersonaDescriptionLength * 0.9
+              }"
+            >
+              {{
+                personaData.get("persona_description")?.value?.length || 0
+              }}/{{ maxPersonaDescriptionLength }}
+            </span>
+          </div>
+          <div
+            *ngIf="
+              isEditMode &&
+              personaData.get('persona_description')?.touched &&
+              personaData.get('persona_description')?.invalid
+            "
+            class="text-red-500 dark:text-red-400 text-sm mt-1"
+          >
+            <span
+              *ngIf="personaData.get('persona_description')?.errors?.['required']"
+              >Description is required</span
+            >
+            <span
+              *ngIf="personaData.get('persona_description')?.errors?.['maxlength']"
+              >Description cannot exceed
+              {{ maxPersonaDescriptionLength }} characters</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversation Examples Section -->
+      <div
+        formGroupName="persona_data"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+            Conversation Examples
+          </h2>
+          <button
+            *ngIf="isEditMode"
+            type="button"
+            (click)="addConversation()"
+            [disabled]="conversations.length >= maxConversationExamples"
+            class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
+          >
+            Add Example
+          </button>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
+          Sample conversations that help your digital twin respond appropriately
+          to user messages.
+        </p>
+
+        <!-- Conversation List -->
+        <div
+          formArrayName="conversations"
+          class="space-y-4 max-h-96 overflow-y-auto p-1"
+        >
+          <div
+            *ngIf="conversations.length === 0"
+            class="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-md"
+          >
+            <p class="text-gray-500 dark:text-gray-400">
+              No conversation examples added yet.
+            </p>
+          </div>
+
+          <div
+            *ngFor="let conversation of conversations.controls; let i = index"
+            class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden hover:shadow-md"
+            [id]="'conversation-' + i"
+          >
+            <!-- Conversation Header -->
+            <div
+              [formGroupName]="i"
+              class="flex justify-between items-center px-4 py-3 cursor-pointer"
+              [ngClass]="{
+                'bg-gray-50 dark:bg-gray-700': activeConversationIndex !== i,
+                'bg-blue-50 dark:bg-blue-900': activeConversationIndex === i
+              }"
+              (click)="toggleConversation(i)"
+            >
+              <div class="flex items-center">
+                <span
+                  class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold mr-2"
+                  [ngClass]="{
+                    'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
+                      activeConversationIndex !== i,
+                    'bg-blue-200 text-blue-900 dark:bg-blue-700 dark:text-white':
+                      activeConversationIndex === i
+                  }"
+                >
+                  {{ i + 1 }}
+                </span>
+                <h3 class="font-medium text-gray-800 dark:text-gray-200">
+                  {{
+                    (conversation.get("question")?.value | slice : 0 : 50) ||
+                      "New Example"
+                  }}{{
+                    conversation.get("question")?.value?.length > 50
+                      ? "..."
+                      : ""
+                  }}
+                </h3>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button
+                  *ngIf="isEditMode"
+                  type="button"
+                  (click)="removeConversation(i, $event)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none"
+                >
+                  <i class="fa fa-trash"></i>
+                </button>
+
+                <i
+                  class="fa"
+                  [ngClass]="{
+                    'fa-chevron-down': activeConversationIndex !== i,
+                    'fa-chevron-up': activeConversationIndex === i
+                  }"
+                ></i>
+              </div>
+            </div>
+
+            <!-- Conversation Content (Expandable) -->
+            <div
+              *ngIf="activeConversationIndex === i"
+              [formGroupName]="i"
+              class="px-4 py-3 border-t border-gray-200 dark:border-gray-700"
+            >
+              <div class="mb-4">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >Question</label
+                >
+                <textarea
+                  formControlName="question"
+                  [readonly]="!isEditMode"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
+                  placeholder="What someone might ask your digital twin..."
+                ></textarea>
+                <div class="flex justify-end">
+                  <span
+                    class="text-xs mt-1"
+                    [ngClass]="{
+                      'text-gray-500 dark:text-gray-400':
+                        conversation.get('question')?.value?.length <=
+                        maxQuestionLength * 0.9,
+                      'text-red-500 dark:text-red-400':
+                        conversation.get('question')?.value?.length >
+                        maxQuestionLength * 0.9
+                    }"
+                  >
+                    {{ conversation.get("question")?.value?.length || 0 }}/{{
+                      maxQuestionLength
+                    }}
+                  </span>
+                </div>
+                <div
+                  *ngIf="
+                    isEditMode &&
+                    conversation.get('question')?.touched &&
+                    conversation.get('question')?.invalid
+                  "
+                  class="text-red-500 dark:text-red-400 text-sm mt-1"
+                >
+                  <span
+                    *ngIf="conversation.get('question')?.errors?.['required']"
+                    >Question is required</span
+                  >
+                  <span
+                    *ngIf="conversation.get('question')?.errors?.['maxlength']"
+                    >Question cannot exceed
+                    {{ maxQuestionLength }} characters</span
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >Answer</label
+                >
+                <textarea
+                  formControlName="answer"
+                  [readonly]="!isEditMode"
+                  rows="4"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
+                  placeholder="How your digital twin should respond..."
+                ></textarea>
+                <div class="flex justify-end">
+                  <span
+                    class="text-xs mt-1"
+                    [ngClass]="{
+                      'text-gray-500 dark:text-gray-400':
+                        conversation.get('answer')?.value?.length <=
+                        maxAnswerLength * 0.9,
+                      'text-red-500 dark:text-red-400':
+                        conversation.get('answer')?.value?.length >
+                        maxAnswerLength * 0.9
+                    }"
+                  >
+                    {{ conversation.get("answer")?.value?.length || 0 }}/{{
+                      maxAnswerLength
+                    }}
+                  </span>
+                </div>
+                <div
+                  *ngIf="
+                    isEditMode &&
+                    conversation.get('answer')?.touched &&
+                    conversation.get('answer')?.invalid
+                  "
+                  class="text-red-500 dark:text-red-400 text-sm mt-1"
+                >
+                  <span *ngIf="conversation.get('answer')?.errors?.['required']"
+                    >Answer is required</span
+                  >
+                  <span
+                    *ngIf="conversation.get('answer')?.errors?.['maxlength']"
+                    >Answer cannot exceed {{ maxAnswerLength }} characters</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Counter -->
+        <div
+          *ngIf="conversations.length > 0"
+          class="mt-4 text-right text-sm text-gray-500 dark:text-gray-400"
+        >
+          {{ conversations.length }} /
+          {{ maxConversationExamples }} conversation examples
+        </div>
+      </div>
+
+      <!-- Actions Area -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        *ngIf="!isEditMode"
+      >
+        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+          Additional Actions
+        </h2>
+
+        <div class="flex flex-wrap gap-3">
+          <button
+            type="button"
+            (click)="duplicateTwin()"
+            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <i class="fa fa-copy mr-2"></i> Duplicate Twin
+          </button>
+
+          <button
+            type="button"
+            (click)="openDeleteConfirmation()"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            <i class="fa fa-trash mr-2"></i> Delete Twin
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- JSON Upload Modal -->
+  <div
+    *ngIf="showJsonUploadModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+          Import Persona Data
+        </h3>
+        <button
+          type="button"
+          (click)="toggleJsonUploadModal()"
+          class="text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none"
+        >
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Upload a JSON file with persona_description and conversations fields to
+        import your digital twin data.
+      </p>
+
+      <div
+        class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-6 text-center hover:border-blue-500 dark:hover:border-blue-400"
+      >
+        <input
+          type="file"
+          id="json-upload"
+          accept=".json,application/json"
+          (change)="uploadPersonaJson($event)"
+          class="hidden"
+        />
+        <label
+          for="json-upload"
+          class="cursor-pointer flex flex-col items-center"
+        >
+          <i
+            class="fa fa-cloud-upload text-3xl text-gray-400 dark:text-gray-500 mb-3"
+          ></i>
+          <span
+            class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+            >Upload JSON file</span
+          >
+          <span class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+            >or drag and drop</span
+          >
+        </label>
+      </div>
+
+      <div
+        *ngIf="jsonUploadError"
+        class="mt-3 p-3 bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 text-sm rounded"
+      >
+        {{ jsonUploadError }}
+      </div>
+
+      <div class="mt-5">
+        <button
+          type="button"
+          (click)="toggleJsonUploadModal()"
+          class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div
+    *ngIf="showDeleteModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+          Delete Confirmation
+        </h3>
+        <button
+          type="button"
+          (click)="closeDeleteConfirmation()"
+          class="text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none"
+        >
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <p class="text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete <strong>{{ twin?.name }}</strong
+          >? This action cannot be undone.
+        </p>
+      </div>
+
+      <div class="flex justify-end space-x-3">
+        <button
+          type="button"
+          (click)="closeDeleteConfirmation()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="deleteTwin()"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
