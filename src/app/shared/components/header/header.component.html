@@ -17,15 +17,14 @@
         <!-- Home page section links - shown when on home page -->
         <ng-container *ngIf="isHomePage">
           <a href="/home/#features" [class.text-blue-600]="activeSection === 'features'" [class.dark:text-blue-400]="activeSection === 'features'" (click)="scrollToHomeSection('features')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">Features</a>
-          <a href="/home/#services" [class.text-blue-600]="activeSection === 'services'" [class.dark:text-blue-400]="activeSection === 'services'" (click)="scrollToHomeSection('services')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">Services</a>
-          <a href="/home/#about" [class.text-blue-600]="activeSection === 'about'" [class.dark:text-blue-400]="activeSection === 'about'" (click)="scrollToHomeSection('about')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">About</a>
+          <a href="/twin" [class.text-blue-600]="activeSection === 'services'" [class.dark:text-blue-400]="activeSection === 'services'" (click)="scrollToHomeSection('services')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">Services</a>
           <a href="/home/#contact" [class.text-blue-600]="activeSection === 'contact'" [class.dark:text-blue-400]="activeSection === 'contact'" (click)="scrollToHomeSection('contact')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">Contact</a>
         </ng-container>
 
         <!-- Full page routes - shown when not on home page -->
         <ng-container *ngIf="!isHomePage">
-          <a href="/home/#services" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Services</a>
-          <a href="/home/#about" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</a>
+          <a href="/twin" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Twins</a>
+          <a href="/home/#features" [class.text-blue-600]="activeSection === 'features'" [class.dark:text-blue-400]="activeSection === 'features'" (click)="scrollToHomeSection('features')" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer">Features</a>
           <a href="/home/#contact" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</a>
         </ng-container>
       </nav>
@@ -96,15 +95,14 @@
           <!-- Home page section links for mobile - shown when on home page -->
           <ng-container *ngIf="isHomePage">
             <a href="/home/#features" [class.text-blue-600]="activeSection === 'features'" [class.dark:text-blue-400]="activeSection === 'features'" (click)="scrollToHomeSection('features'); toggleMobileMenu()" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
-            <a href="/home/#services" [class.text-blue-600]="activeSection === 'services'" [class.dark:text-blue-400]="activeSection === 'services'" (click)="scrollToHomeSection('services'); toggleMobileMenu()" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Services</a>
-            <a href="/home/#about" [class.text-blue-600]="activeSection === 'about'" [class.dark:text-blue-400]="activeSection === 'about'" (click)="scrollToHomeSection('about'); toggleMobileMenu()" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</a>
+            <a href="/twin" [class.text-blue-600]="activeSection === 'services'" [class.dark:text-blue-400]="activeSection === 'services'" (click)="scrollToHomeSection('services'); toggleMobileMenu()" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Twins</a>
             <a href="/home/#contact" [class.text-blue-600]="activeSection === 'contact'" [class.dark:text-blue-400]="activeSection === 'contact'" (click)="scrollToHomeSection('contact'); toggleMobileMenu()" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</a>
           </ng-container>
 
           <!-- Full page routes for mobile - shown when not on home page -->
           <ng-container *ngIf="!isHomePage">
-            <a href="/home/#services" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Services</a>
-            <a href="/home/#about" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</a>
+            <a href="/twin" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Twins</a>
+            <a href="/home/#features" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
             <a href="/home/#contact" routerLinkActive="text-blue-600 dark:text-blue-400 font-medium" class="py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</a>
           </ng-container>
 
