@@ -17,7 +17,8 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
   isDarkMode = false;
 
   // Configuration constants
-  maxConversationExamples = 200;
+  maxConversationExamples = 1000;
+  minConversationExamples = 100;
   maxQuestionLength = 1000;
   maxAnswerLength = 2000;
   maxPersonaDescriptionLength = 5000;
@@ -76,7 +77,7 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
 
   // Common methods for both components
   addConversation(): void {
-    if (this.conversations.length >= this.maxConversationExamples) {
+    if (this.conversations.length >= this.maxConversationExamples || this.conversations.length <= this.minConversationExamples) {
       this.handleNotification('warning', 'Maximum conversations reached',
         `You can only add up to ${this.maxConversationExamples} conversation examples`);
       return;
