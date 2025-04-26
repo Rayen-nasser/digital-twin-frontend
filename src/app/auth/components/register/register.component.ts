@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { AuthService } from '../../service/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
+import { ThemeService } from '../../../core/services/theme.service';
 
 interface ValidationErrors {
   [key: string]: string[];
@@ -14,7 +15,7 @@ interface ValidationErrors {
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   profilePicture: File | null = null;
   profilePicturePreview: string | null = null;
@@ -22,19 +23,40 @@ export class RegisterComponent {
   isValidFile = true;
   submittedEmail = '';
   step = 1; // Step 1: Form, Step 2: Verification instructions
+  showPassword = false;
+  isDarkMode = false;
 
   constructor(
     private fb: FormBuilder,
     private spinner: NgxSpinnerService,
     private authService: AuthService,
     private toastService: ToastrService,
-    private router: Router
+    private router: Router,
+    private themeService: ThemeService
   ) {
     this.registerForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
+  }
+
+  ngOnInit(): void {
+    // Check the current theme
+    this.isDarkMode = this.themeService.isDarkMode();
+
+    // Subscribe to theme changes
+    this.themeService.darkMode$.subscribe(isDark => {
+      this.isDarkMode = isDark;
+    });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleDarkMode();
   }
 
   onFileChange(event: Event): void {

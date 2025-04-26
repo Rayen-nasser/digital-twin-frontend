@@ -1,20 +1,27 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { BehaviorSubject, map, Observable, of, shareReplay, finalize } from 'rxjs';
+import { BehaviorSubject, map, Observable, of, shareReplay, finalize, tap, catchError, throwError } from 'rxjs';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { isPlatformBrowser } from '@angular/common';
+import { User } from '../../interfaces/user.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  requestPasswordReset(email: string): Observable<any> {
+    // Replace with actual HTTP request implementation
+    return this.httpClient.post('/api/password-reset', { email });
+  }
+
   private apiUrl = environment.apiUrl + '/auth';
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   private isBrowser: boolean;
+  private userSubject = new BehaviorSubject<User | null>(null);
+  public user$ = this.userSubject.asObservable();
 
-  // Request deduplication
-  private pendingVerifications = new Map<string, Observable<any>>();
+
 
   constructor(
     private httpClient: HttpClient,
@@ -29,6 +36,36 @@ export class AuthService {
     } else {
       this.isAuthenticated.next(false);
     }
+  }
+
+  private loadUserFromStorage(): void {
+    const userStr = localStorage.getItem('user_profile');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      this.userSubject.next(user);
+    }
+  }
+
+   // Get user profile
+   getUserProfile(): Observable<User> {
+    return this.httpClient.get<User>(`${environment.apiUrl}/auth/profile/`).pipe(
+      tap((user: any) => {
+        localStorage.setItem('user_profile', JSON.stringify(user));
+        this.userSubject.next(user);
+      })
+    );
+  }
+
+   // Update user profile
+   updateUserProfile(profileData: any): Observable<User> {
+    return this.httpClient.put<User>(`${environment.apiUrl}/auth/profile/`, profileData).pipe(
+      tap(updatedUser => {
+        const currentUser = this.userSubject.value;
+        const mergedUser = { ...currentUser, ...updatedUser };
+        localStorage.setItem('user_profile', JSON.stringify(mergedUser));
+        this.userSubject.next(mergedUser);
+      })
+    );
   }
 
   // Login method
@@ -180,5 +217,74 @@ export class AuthService {
 
     const user = JSON.parse(userProfile);
     return this.isAuthenticated.value && user.is_verified === false;
+  }
+
+   // Upload profile image
+   uploadProfileImage(imageFile: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('profile_image', imageFile);
+
+    return this.httpClient.put<any>(`${this.apiUrl}/profile/image/`, formData).pipe(
+      tap(response => {
+        const currentUser = this.userSubject.value;
+        if (currentUser) {
+          const updatedUser = { ...currentUser, profile_image: response.profile_image };
+          localStorage.setItem('user_profile', JSON.stringify(updatedUser));
+          this.userSubject.next(updatedUser);
+        }
+      })
+    );
+  }
+
+  // Delete profile image
+  deleteProfileImage(): Observable<any> {
+    return this.httpClient.delete(`${this.apiUrl}/profile/image/`).pipe(
+      tap(() => {
+        const currentUser = this.userSubject.value;
+        if (currentUser) {
+          const updatedUser = { ...currentUser, profile_image: null };
+          localStorage.setItem('user_profile', JSON.stringify(updatedUser));
+          this.userSubject.next(updatedUser);
+        }
+      })
+    );
+  }
+
+  // Change password
+  changePassword(passwordData: { old_password: string, new_password: string }): Observable<any> {
+    return this.httpClient.post(`${this.apiUrl}/change-password/`, passwordData);
+  }
+
+  // Request password reset
+  resetPassword(data: { token: string, new_password: string, email: string }): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiUrl}/password-reset/confirm/`, data)
+      .pipe(
+        catchError(error => {
+          return throwError(() => error);
+        })
+      );
+  }
+
+    /**
+ * Verify if a password reset token is valid
+ * @param token The password reset token to verify
+ * @returns An observable with the verification result
+ */
+  verifyResetToken(token: string): Observable<any> {
+    return this.httpClient.post<any>(`${this.apiUrl}/verify-token/`, { token })
+      .pipe(
+        catchError(error => {
+          return throwError(() => error);
+        })
+      );
+  }
+
+  requestForgotPassword(email: string){
+    return this.httpClient.post<any>(`${this.apiUrl}/forgot-password/`, { email })
+      .pipe(
+        catchError(error => {
+          return throwError(() => error);
+        })
+      );
   }
 }

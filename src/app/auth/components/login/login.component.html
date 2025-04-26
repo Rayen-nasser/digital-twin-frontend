@@ -1,52 +1,119 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100">
-  <div class="max-w-sm w-full p-8 bg-white shadow-xl rounded-lg">
-    <h2 class="text-3xl font-bold text-center mb-6">Login to Your Account</h2>
+<!-- login.component.html -->
+<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+  <div class="max-w-sm w-full p-8 bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+    <h2 class="text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white">Login to Your Account</h2>
 
     <form (ngSubmit)="onSubmit()" [formGroup]="loginForm">
       <!-- Error message for invalid form -->
-      <!-- <div *ngIf="loginForm.invalid " class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm font-medium rounded-md error-message">
-        Please fill in the required fields correctly.
-      </div> -->
-
-      <div class="mb-6">
-        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-        <input
-          type="username"
-          id="username"
-          formControlName="username"
-          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          [ngClass]="{'border-red-500': loginForm.get('username')?.invalid && loginForm.get('username')?.touched}"
-          placeholder="Enter your username"
-        />
+      <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-100 dark:bg-red-900 border-l-4 border-red-500 text-red-700 dark:text-red-300 text-sm font-medium rounded-md">
+        {{ errorMessage }}
       </div>
 
-      <div class="mb-6">
-        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          id="password"
-          formControlName="password"
-          class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          [ngClass]="{'border-red-500': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
-          placeholder="Enter your password"
-        />
-
+      <div class="mb-5">
+        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 dark:text-gray-400">
+            <i class="fa fa-user"></i>
+          </span>
+          <input
+            type="text"
+            id="username"
+            formControlName="username"
+            class="w-full pl-10 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white border-gray-300 dark:border-gray-600"
+            [ngClass]="{'border-red-500 dark:border-red-500': loginForm.get('username')?.invalid && loginForm.get('username')?.touched}"
+            placeholder="Enter your username"
+          />
+        </div>
+        <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="text-red-500 text-xs mt-1">
+          Username is required
+        </div>
       </div>
 
-      <div class="mb-6">
+      <div class="mb-5">
+        <div class="flex justify-between items-center mb-1">
+          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+          <a href="/auth/forgot-password" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">Forgot Password?</a>
+        </div>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500 dark:text-gray-400">
+            <i class="fa fa-lock"></i>
+          </span>
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="w-full pl-10 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white border-gray-300 dark:border-gray-600"
+            [ngClass]="{'border-red-500 dark:border-red-500': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            (click)="togglePasswordVisibility()"
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400"
+          >
+            <i class="fa" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-red-500 text-xs mt-1">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <label class="flex items-center">
+          <input type="checkbox" formControlName="rememberMe" class="mr-2 h-4 w-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500">
+          <span class="text-sm text-gray-700 dark:text-gray-300">Remember me</span>
+        </label>
+      </div>
+
+      <div class="mb-5">
         <button
           type="submit"
-          class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+          class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-medium px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-200 disabled:opacity-50"
           [disabled]="!loginForm.valid || loading"
         >
-          <span *ngIf="loading">Logging in...</span>
+          <span *ngIf="loading" class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Logging in...
+          </span>
           <span *ngIf="!loading">Login</span>
         </button>
       </div>
 
-      <p class="mt-4 text-center text-sm text-gray-600">
-        Don’t have an account? <a href="/auth/register" class="text-blue-600 hover:underline">Register</a>
+      <!-- <div class="flex items-center my-4">
+        <hr class="flex-grow border-gray-300 dark:border-gray-600">
+        <span class="px-3 text-sm text-gray-500 dark:text-gray-400">OR</span>
+        <hr class="flex-grow border-gray-300 dark:border-gray-600">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <button type="button" class="flex items-center justify-center py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
+          <i class="fab fa-google mr-2"></i> Google
+        </button>
+        <button type="button" class="flex items-center justify-center py-2 px-4 bg-blue-800 hover:bg-blue-900 text-white rounded-md transition-colors">
+          <i class="fab fa-facebook-f mr-2"></i> Facebook
+        </button>
+      </div> -->
+
+      <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+        Don't have an account? <a href="/auth/register" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">Register</a>
       </p>
     </form>
   </div>
 </div>
+
+<!-- Theme toggle button -->
+<button
+  (click)="toggleTheme()"
+  class="fixed top-4 right-4 p-3 rounded-full bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 transform hover:-translate-y-0.5">
+  <svg *ngIf="!isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+  </svg>
+  <svg *ngIf="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+  </svg>
+</button>

@@ -8,13 +8,19 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { LoginComponent } from './components/login/login.component';
 import { VerifyEmailComponent } from './components/verify-email/verify-email.component';
+import { ProfileComponent } from './components/profile/profile.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { ForgottenPasswordComponent } from './components/forgotten-password/forgotten-password.component';
 
 
 @NgModule({
   declarations: [
     LoginComponent,
     RegisterComponent,
-    VerifyEmailComponent
+    VerifyEmailComponent,
+    ProfileComponent,
+    ResetPasswordComponent,
+    ForgottenPasswordComponent,
   ],
   imports: [
     CommonModule,
