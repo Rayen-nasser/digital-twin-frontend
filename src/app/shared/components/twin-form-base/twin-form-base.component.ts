@@ -2,7 +2,7 @@
 import { Directive, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ThemeService } from '../../../core/services/theme.service';
+import { Theme, ThemeService } from '../../../core/services/theme.service';
 
 @Directive({
   selector: '[appTwinFormBase]'
@@ -40,8 +40,9 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Subscribe to theme changes
-    this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeSubscription = this.themeService.theme$.subscribe(theme => {
+      this.isDarkMode = theme === 'dark';
+      // Additional theme-related logic can be added here
     });
   }
 
@@ -77,7 +78,7 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
 
   // Common methods for both components
   addConversation(): void {
-    if (this.conversations.length >= this.maxConversationExamples || this.conversations.length <= this.minConversationExamples) {
+    if (this.conversations.length >= this.maxConversationExamples && this.conversations.length <= this.minConversationExamples) {
       this.handleNotification('warning', 'Maximum conversations reached',
         `You can only add up to ${this.maxConversationExamples} conversation examples`);
       return;
