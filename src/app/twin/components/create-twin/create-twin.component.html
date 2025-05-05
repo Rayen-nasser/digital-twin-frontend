@@ -1,24 +1,24 @@
 <!-- digital-twin-create.component.html -->
-<div class="container mx-auto px-4 py-20 pb-8 max-w-4xl">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+<div class="container mx-auto px-2 sm:px-4 py-8 sm:py-12 md:py-16 max-w-4xl">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-0">
       Create Digital Twin
     </h1>
   </div>
 
-  <form [formGroup]="twinForm" (ngSubmit)="onSubmit()" class="space-y-8">
+  <form [formGroup]="twinForm" (ngSubmit)="onSubmit()" class="space-y-6">
     <!-- Basic Info Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
         Basic Information
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div class="mb-2 sm:mb-4">
           <label
             for="name"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            <span class="text-lg font-bold text-gray-900 dark:text-gray-100"
+            <span class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
               >Twin Name <span class="text-red-500">*</span></span
             >
           </label>
@@ -49,7 +49,7 @@
             for="privacy"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            <span class="text-lg font-bold text-gray-900 dark:text-gray-100"
+            <span class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
               >Privacy Setting <span class="text-red-500">*</span></span
             >
           </label>
@@ -70,8 +70,8 @@
     </div>
 
     <!-- Avatar Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
         Avatar
       </h2>
 
@@ -80,12 +80,13 @@
           <img
             [src]="imagePreview"
             alt="Avatar preview"
-            class="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+            class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
           />
           <button
             type="button"
             (click)="removeImage()"
             class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 focus:outline-none"
+            aria-label="Remove image"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -107,11 +108,11 @@
         <div *ngIf="!imagePreview" class="mb-4">
           <label
             for="avatar"
-            class="cursor-pointer flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400"
+            class="cursor-pointer flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-10 w-10 mb-2"
+              class="h-8 w-8 sm:h-10 sm:w-10 mb-2"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -123,7 +124,7 @@
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-            <span class="text-sm">Upload Avatar</span>
+            <span class="text-xs sm:text-sm">Upload Avatar</span>
           </label>
           <input
             type="file"
@@ -134,7 +135,7 @@
           />
         </div>
 
-        <p class="text-gray-500 dark:text-gray-400 text-sm">
+        <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm text-center">
           Upload a square image for best results. Will be resized to 500x500px
           if larger.
         </p>
@@ -143,14 +144,14 @@
 
     <!-- Persona Section -->
     <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
       formGroupName="persona_data"
     >
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+        <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200">
           Persona Description <span class="text-red-500">*</span>
         </h2>
-        <div class="flex space-x-2">
+        <div class="flex space-x-2 mb-2 sm:mb-0">
           <button
             type="button"
             (click)="toggleJsonUploadModal()"
@@ -173,7 +174,7 @@
         </div>
       </div>
 
-      <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+      <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-2">
         Describe the personality, knowledge, and characteristics of your digital
         twin.
       </p>
@@ -225,36 +226,36 @@
     <!-- Conversation Examples Section -->
     <div
       formGroupName="persona_data"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
     >
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+        <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200">
           Conversation Examples
         </h2>
         <button
           type="button"
           (click)="addConversation()"
           [disabled]="conversations.length >= maxConversationExamples"
-          class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
+          class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           Add Example
         </button>
       </div>
 
-      <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
+      <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-4">
         Add sample conversations to help train your digital twin how to respond.
       </p>
 
       <!-- Conversation List -->
       <div
         formArrayName="conversations"
-        class="space-y-4 max-h-96 overflow-y-auto p-1"
+        class="space-y-4 max-h-80 sm:max-h-96 overflow-y-auto p-1"
       >
         <div
           *ngIf="conversations.length === 0"
-          class="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-md"
+          class="text-center py-6 sm:py-8 bg-gray-50 dark:bg-gray-700 rounded-md"
         >
-          <p class="text-gray-500 dark:text-gray-400">
+          <p class="text-gray-500 dark:text-gray-400 text-sm">
             No conversation examples added yet. Click "Add Example" to create
             one.
           </p>
@@ -268,16 +269,16 @@
           <!-- Conversation Header -->
           <div
             [formGroupName]="i"
-            class="flex justify-between items-center px-4 py-3 cursor-pointer"
+            class="flex justify-between items-center px-3 sm:px-4 py-2 sm:py-3 cursor-pointer"
             [ngClass]="{
               'bg-gray-50 dark:bg-gray-700': activeConversationIndex !== i,
               'bg-blue-50 dark:bg-blue-900': activeConversationIndex === i
             }"
             (click)="toggleConversation(i)"
           >
-            <div class="flex items-center">
+            <div class="flex items-center overflow-hidden">
               <span
-                class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold mr-2"
+                class="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs font-semibold mr-2"
                 [ngClass]="{
                   'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
                     activeConversationIndex !== i,
@@ -287,25 +288,26 @@
               >
                 {{ i + 1 }}
               </span>
-              <h3 class="font-medium text-gray-800 dark:text-gray-200">
+              <h3 class="font-medium text-gray-800 dark:text-gray-200 truncate text-sm sm:text-base">
                 {{
-                  (conversation.get("question")?.value | slice : 0 : 50) ||
+                  (conversation.get("question")?.value | slice : 0 : 30) ||
                     "New Example"
                 }}{{
-                  conversation.get("question")?.value?.length > 50 ? "..." : ""
+                  conversation.get("question")?.value?.length > 30 ? "..." : ""
                 }}
               </h3>
             </div>
 
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2">
               <button
                 type="button"
                 (click)="removeConversation(i, $event)"
                 class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none"
+                aria-label="Remove conversation"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
+                  class="h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -321,7 +323,7 @@
 
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 transform"
+                class="h-4 w-4 sm:h-5 sm:w-5 transform"
                 [ngClass]="{ 'rotate-180': activeConversationIndex === i }"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -341,7 +343,7 @@
           <div
             *ngIf="activeConversationIndex === i"
             [formGroupName]="i"
-            class="px-4 py-3 border-t border-gray-200 dark:border-gray-700"
+            class="px-3 sm:px-4 py-3 border-t border-gray-200 dark:border-gray-700"
           >
             <div class="mb-4">
               <label
@@ -439,7 +441,7 @@
       <!-- Progress Counter -->
       <div
         *ngIf="conversations.length > 0"
-        class="mt-4 text-right text-sm text-gray-500 dark:text-gray-400"
+        class="mt-4 text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400"
       >
         {{ conversations.length }} / {{ maxConversationExamples }} conversation
         examples
@@ -447,11 +449,11 @@
     </div>
 
     <!-- Submit Buttons -->
-    <div class="flex gap-4">
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
       <button
         type="submit"
         [disabled]="isSubmitting"
-        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300 disabled:cursor-not-allowed"
+        class="order-1 sm:order-none flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300 disabled:cursor-not-allowed"
       >
         <span *ngIf="!isSubmitting">Create Twin</span>
         <span *ngIf="isSubmitting" class="flex items-center justify-center">
@@ -481,7 +483,7 @@
       <button
         type="button"
         [routerLink]="['/twin']"
-        class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        class="order-2 sm:order-none px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
       >
         Cancel
       </button>
@@ -491,23 +493,24 @@
   <!-- JSON Upload Modal -->
   <div
     *ngIf="showJsonUploadModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
   >
     <div
-      class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl"
+      class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md p-4 sm:p-6 shadow-xl"
     >
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h3 class="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
           Import Persona Data
         </h3>
         <button
           type="button"
           (click)="toggleJsonUploadModal()"
           class="text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none"
+          aria-label="Close modal"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5 sm:h-6 sm:w-6"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -522,13 +525,13 @@
         </button>
       </div>
 
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
         Upload a JSON file with persona_description and conversations fields to
         import your digital twin data.
       </p>
 
       <div
-        class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-6 text-center hover:border-blue-500 dark:hover:border-blue-400"
+        class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-4 sm:p-6 text-center hover:border-blue-500 dark:hover:border-blue-400"
       >
         <input
           type="file"
@@ -543,7 +546,7 @@
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-10 w-10 text-gray-400 dark:text-gray-500 mb-3"
+            class="h-8 w-8 sm:h-10 sm:w-10 text-gray-400 dark:text-gray-500 mb-2 sm:mb-3"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -567,7 +570,7 @@
 
       <div
         *ngIf="jsonUploadError"
-        class="mt-3 p-3 bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 text-sm rounded"
+        class="mt-3 p-3 bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 text-xs sm:text-sm rounded"
       >
         {{ jsonUploadError }}
       </div>
