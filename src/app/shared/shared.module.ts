@@ -5,6 +5,8 @@ import { FooterComponent } from './components/footer/footer.component';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomePageComponent } from './components/homepage/homepage.component';
+import { ThemeToggleComponent } from './components/theme-toggle/theme-toggle.component';
+import { SettingsMenuComponent } from './components/settings-menu/settings-menu.component';
 
 
 @NgModule({
@@ -12,6 +14,8 @@ import { HomePageComponent } from './components/homepage/homepage.component';
     HeaderComponent,
     FooterComponent,
     HomePageComponent,
+    ThemeToggleComponent,
+    SettingsMenuComponent
   ],
   imports: [
     CommonModule,
@@ -23,6 +27,8 @@ import { HomePageComponent } from './components/homepage/homepage.component';
     HeaderComponent,
     FooterComponent,
     HomePageComponent,
+    ThemeToggleComponent,
+    SettingsMenuComponent
   ]
 })
 export class SharedModule { }
