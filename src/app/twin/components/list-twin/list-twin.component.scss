@@ -752,6 +752,10 @@ $transition-slow: 350ms;
     color: $danger-color;
   }
 
+  &.chat:hover {
+    color: $active-color; // Replace with a valid color variable or value
+  }
+
   .dark-theme & {
     color: $dark-text-light;
 

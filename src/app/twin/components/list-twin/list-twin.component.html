@@ -1,5 +1,5 @@
 <div class="twins-container" [class.dark-theme]="isDarkMode">
-  <!-- View selector tabs -->
+  <!-- View selector tabs - now with responsive design -->
   <div class="view-selector">
     <div class="tabs-container">
       <button
@@ -31,15 +31,15 @@
           class="fa"
           [ngClass]="showFilters ? 'fa-filter-slash' : 'fa-filter'"
         ></i>
-        {{ showFilters ? "Hide Filters" : "Show Filters" }}
+        <span class="button-text">{{ showFilters ? "Hide Filters" : "Show Filters" }}</span>
       </button>
       <button class="primary-button create-button" (click)="createNewTwin()">
-        <i class="fa fa-plus"></i> Create Twin
+        <i class="fa fa-plus"></i> <span class="button-text">Create Twin</span>
       </button>
     </div>
   </div>
 
-  <!-- Filter panel with improved layout -->
+  <!-- Responsive filter panel -->
   <div class="filter-panel" [@slideToggle]="showFilters ? 'show' : 'hide'">
     <form [formGroup]="filterForm" class="filter-form">
       <div class="filter-grid">
@@ -106,7 +106,7 @@
     </form>
   </div>
 
-  <!-- Content area -->
+  <!-- Content area with responsive grid -->
   <div class="twins-content">
     <!-- Loading state -->
     <div *ngIf="isLoading" class="loading-container">
@@ -155,7 +155,7 @@
       </div>
     </div>
 
-    <!-- Twins grid with improved cards -->
+    <!-- Responsive twins grid with improved cards -->
     <div *ngIf="!isLoading && !error && twins.length > 0" class="twins-grid">
       <div
         *ngFor="let twin of twins"
@@ -209,16 +209,14 @@
         </div>
 
         <div class="card-actions">
+          <!-- Chat button replacing the toggle button -->
           <button
-            class="icon-button"
-            [class.active]="twin.is_active"
-            [title]="twin.is_active ? 'Deactivate twin' : 'Activate twin'"
-            (click)="toggleTwinActive(twin, $event)"
+            class="icon-button chat"
+            [disabled]="!twin.is_active"
+            title="Chat with this twin"
+            (click)="chatWithTwin(twin, $event)"
           >
-            <i
-              class="fa"
-              [ngClass]="twin.is_active ? 'fa-toggle-on' : 'fa-toggle-off'"
-            ></i>
+            <i class="fa fa-comment"></i>
           </button>
 
           <button
@@ -240,7 +238,7 @@
       </div>
     </div>
 
-    <!-- Enhanced pagination -->
+    <!-- Enhanced responsive pagination -->
     <div
       *ngIf="!isLoading && !error && totalTwins > pageSize"
       class="pagination-container"

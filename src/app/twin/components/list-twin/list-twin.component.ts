@@ -28,6 +28,7 @@ import { ToastrService } from 'ngx-toastr';
   ]
 })
 export class ListTwinComponent implements OnInit, OnDestroy {
+
   // Twin data
   twins: Twin[] = [];
   isLoading = true;
@@ -122,20 +123,11 @@ export class ListTwinComponent implements OnInit, OnDestroy {
         this.updateUrlWithFilters(values);
       });
 
-    // Subscribe to theme changes
-    this.themeService.darkMode$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(isDark => {
-        this.isDarkMode = isDark;
-        // No need for detectChanges here as we're using OnPush strategy
-        // The template should use the isDarkMode property to conditionally apply classes
-      });
-
     // Check if filters should be shown based on URL params
     this.showFilters = this.hasActiveFilters();
 
     // Initialize dark mode state from service
-    this.isDarkMode = this.themeService.isDarkMode();
+    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
   }
 
   ngOnDestroy(): void {
@@ -454,4 +446,9 @@ export class ListTwinComponent implements OnInit, OnDestroy {
 
     return pages;
   }
+
+  chatWithTwin(_t109: Twin,$event: MouseEvent) {
+      $event.stopPropagation();
+      this.router.navigate(['/chat/dashboard']);
+    }
 }
