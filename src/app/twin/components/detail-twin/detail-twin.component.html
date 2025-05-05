@@ -1,26 +1,26 @@
 <div
-  class="container mx-auto px-4 py-16 max-w-4xl"
+  class="container mx-auto px-3 sm:px-4 py-6 sm:py-10 md:py-16 max-w-4xl"
   [class.dark-theme]="isDarkMode"
 >
   <!-- Loading State -->
   <div
     *ngIf="isLoading"
-    class="flex flex-col items-center justify-center py-16"
+    class="flex flex-col items-center justify-center py-10 sm:py-17"
   >
     <div class="spinner"></div>
     <p class="mt-4 text-gray-600 dark:text-gray-300">Loading twin details...</p>
   </div>
 
   <!-- Error State -->
-  <div *ngIf="error" class="bg-red-50 dark:bg-red-900 p-6 rounded-lg shadow">
+  <div *ngIf="error" class="bg-red-50 dark:bg-red-900 p-4 sm:p-6 rounded-lg shadow">
     <div class="flex items-center text-red-700 dark:text-red-300">
-      <i class="fa fa-exclamation-circle text-2xl mr-3"></i>
-      <p>{{ error }}</p>
+      <i class="fa fa-exclamation-circle text-xl sm:text-2xl mr-3"></i>
+      <p class="text-sm sm:text-base">{{ error }}</p>
     </div>
     <div class="mt-4 flex justify-center">
       <button
         (click)="loadTwinDetails()"
-        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+        class="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
       >
         Try Again
       </button>
@@ -31,26 +31,26 @@
   <div *ngIf="!isLoading && !error && twin">
     <!-- Header with Actions -->
     <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+      class="flex mt-5 flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6"
     >
-      <div class="flex items-center">
+      <div class="flex items-center mb-3 sm:mb-0">
         <button
           (click)="goBack()"
-          class="mr-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+          class="mr-2 sm:mr-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           title="Back to list"
         >
-          <i class="fa fa-arrow-left text-lg"></i>
+          <i class="fa fa-arrow-left text-base sm:text-lg"></i>
         </button>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate max-w-xs sm:max-w-sm md:max-w-md">
           {{ isEditMode ? "Edit" : "View" }} Twin: {{ twin.name }}
         </h1>
       </div>
 
-      <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
+      <div class="flex flex-wrap gap-2 w-full sm:w-auto">
         <button
           *ngIf="!isEditMode"
           (click)="chatWithTwin()"
-          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <i class="fa fa-comments mr-2"></i> Chat with Twin
         </button>
@@ -58,7 +58,7 @@
         <button
           *ngIf="!isEditMode"
           (click)="toggleEditMode()"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <i class="fa fa-edit mr-2"></i> Edit Twin
         </button>
@@ -67,7 +67,7 @@
           *ngIf="isEditMode"
           (click)="saveChanges()"
           [disabled]="isSaving"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
+          class="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
         >
           <i *ngIf="!isSaving" class="fa fa-save mr-2"></i>
           <span *ngIf="isSaving" class="spinner-small mr-2"></span>
@@ -77,7 +77,7 @@
         <button
           *ngIf="isEditMode"
           (click)="toggleEditMode()"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          class="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
         >
           Cancel
         </button>
@@ -85,9 +85,9 @@
     </div>
 
     <!-- Twin Status Badge -->
-    <div class="mb-6 flex flex-wrap items-center gap-4">
+    <div class="mb-4 sm:mb-6 flex flex-wrap items-center gap-2 sm:gap-4">
       <span
-        class="px-3 py-1 text-sm font-semibold rounded-full"
+        class="px-2 py-1 text-xs sm:text-sm font-semibold rounded-full"
         [ngClass]="{
           'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
             twin.is_active,
@@ -99,7 +99,7 @@
       </span>
 
       <span
-        class="px-3 py-1 text-sm font-semibold rounded-full"
+        class="px-2 py-1 text-xs sm:text-sm font-semibold rounded-full"
         [ngClass]="{
           'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
             twin.privacy_setting === 'public',
@@ -110,20 +110,20 @@
         {{ twin.privacy_setting | titlecase }}
       </span>
 
-      <span class="ml-auto text-sm text-gray-500 dark:text-gray-400">
+      <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 ml-auto">
         Created: {{ twin.created_at | date : "medium" }}
       </span>
     </div>
 
     <!-- Forms Area -->
-    <form [formGroup]="twinForm" class="space-y-8">
+    <form [formGroup]="twinForm" class="space-y-4 sm:space-y-6 md:space-y-8">
       <!-- Basic Info Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-700 dark:text-gray-200">
           Basic Information
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <!-- Name Field -->
           <div>
             <label
@@ -131,7 +131,7 @@
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               <span
-                class="text-lg font-medium text-gray-900 dark:text-gray-100"
+                class="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100"
               >
                 Twin Name <span class="text-red-500">*</span>
               </span>
@@ -141,7 +141,7 @@
               id="name"
               formControlName="name"
               [readonly]="!isEditMode"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm sm:text-base"
               [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
             />
             <div
@@ -150,7 +150,7 @@
                 twinForm.get('name')?.touched &&
                 twinForm.get('name')?.invalid
               "
-              class="text-red-500 dark:text-red-400 text-sm mt-1"
+              class="text-red-500 dark:text-red-400 text-xs sm:text-sm mt-1"
             >
               <span *ngIf="twinForm.get('name')?.errors?.['required']"
                 >Name is required</span
@@ -168,7 +168,7 @@
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               <span
-                class="text-lg font-medium text-gray-900 dark:text-gray-100"
+                class="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100"
               >
                 Privacy Setting <span class="text-red-500">*</span>
               </span>
@@ -177,7 +177,7 @@
               id="privacy"
               formControlName="privacy_setting"
               [disabled]="!isEditMode"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm sm:text-base"
               [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
             >
               <option
@@ -194,24 +194,24 @@
         <div class="mt-4 flex items-center" *ngIf="!isEditMode">
           <label class="inline-flex items-center cursor-pointer">
             <span
-              class="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="mr-3 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300"
               >Status:</span
             >
             <button
               type="button"
-              class="relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="relative inline-flex items-center h-5 sm:h-6 w-10 sm:w-11 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               [class.bg-green-500]="twin.is_active"
               [class.bg-gray-300]="!twin.is_active"
               (click)="toggleActiveStatus()"
             >
               <span
-                class="inline-block h-4 w-4 transform bg-white rounded-full shadow transition-transform duration-200"
+                class="inline-block h-3 sm:h-4 w-3 sm:w-4 transform bg-white rounded-full shadow transition-transform duration-200"
                 [class.translate-x-5]="twin.is_active"
                 [class.translate-x-0]="!twin.is_active"
               ></span>
             </button>
             <span
-              class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="ml-3 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               {{ twin.is_active ? "Active" : "Inactive" }}
             </span>
@@ -220,35 +220,35 @@
       </div>
 
       <!-- Avatar Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-700 dark:text-gray-200">
           Avatar
         </h2>
 
         <div class="flex flex-col items-center">
-          <div *ngIf="imagePreview" class="relative mb-4">
+          <div *ngIf="imagePreview" class="relative mb-3 sm:mb-4">
             <img
               [src]="imagePreview"
               alt="Avatar preview"
-              class="w-32 h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+              class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
             />
             <button
               *ngIf="isEditMode"
               type="button"
               (click)="removeImage()"
-              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 focus:outline-none"
+              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center shadow-md hover:bg-red-600 focus:outline-none"
             >
-              <i class="fa fa-times"></i>
+              <i class="fa fa-times text-xs sm:text-sm"></i>
             </button>
           </div>
 
-          <div *ngIf="!imagePreview && isEditMode" class="mb-4">
+          <div *ngIf="!imagePreview && isEditMode" class="mb-3 sm:mb-4">
             <label
               for="avatar"
-              class="cursor-pointer flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400"
+              class="cursor-pointer flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400"
             >
-              <i class="fa fa-plus text-3xl mb-2"></i>
-              <span class="text-sm">Upload Avatar</span>
+              <i class="fa fa-plus text-xl sm:text-3xl mb-1 sm:mb-2"></i>
+              <span class="text-xs sm:text-sm">Upload Avatar</span>
             </label>
             <input
               type="file"
@@ -259,18 +259,18 @@
             />
           </div>
 
-          <div *ngIf="!imagePreview && !isEditMode" class="mb-4">
+          <div *ngIf="!imagePreview && !isEditMode" class="mb-3 sm:mb-4">
             <div
-              class="flex flex-col items-center justify-center w-32 h-32 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+              class="flex flex-col items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
             >
-              <i class="fa fa-user text-4xl"></i>
-              <span class="text-xs mt-2">No Avatar</span>
+              <i class="fa fa-user text-2xl sm:text-4xl"></i>
+              <span class="text-xs mt-1 sm:mt-2">No Avatar</span>
             </div>
           </div>
 
           <p
             *ngIf="isEditMode"
-            class="text-gray-500 dark:text-gray-400 text-sm"
+            class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm text-center"
           >
             Upload a square image for best results. Will be resized to 500x500px
             if larger.
@@ -280,18 +280,18 @@
 
       <!-- Persona Section -->
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
         formGroupName="persona_data"
       >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 gap-2 sm:gap-0">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-700 dark:text-gray-200">
             Persona Description <span class="text-red-500">*</span>
           </h2>
-          <div *ngIf="isEditMode" class="flex space-x-2">
+          <div *ngIf="isEditMode" class="flex space-x-2 w-full sm:w-auto">
             <button
               type="button"
               (click)="toggleJsonUploadModal()"
-              class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-1/2 sm:w-auto px-2 sm:px-3 py-1 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               Import JSON
             </button>
@@ -299,7 +299,7 @@
             <button
               type="button"
               (click)="downloadPersonaJson()"
-              class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              class="w-1/2 sm:w-auto px-2 sm:px-3 py-1 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
               [disabled]="
                 !personaData.get('persona_description')?.value &&
                 conversations.length === 0
@@ -310,16 +310,16 @@
           </div>
         </div>
 
-        <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+        <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-2">
           The personality, knowledge, and characteristics of your digital twin.
         </p>
 
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
           <textarea
             formControlName="persona_description"
-            rows="6"
+            rows="5"
             [readonly]="!isEditMode"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm sm:text-base"
             [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
           ></textarea>
           <div class="flex justify-end">
@@ -345,7 +345,7 @@
               personaData.get('persona_description')?.touched &&
               personaData.get('persona_description')?.invalid
             "
-            class="text-red-500 dark:text-red-400 text-sm mt-1"
+            class="text-red-500 dark:text-red-400 text-xs sm:text-sm mt-1"
           >
             <span
               *ngIf="personaData.get('persona_description')?.errors?.['required']"
@@ -363,10 +363,10 @@
       <!-- Conversation Examples Section -->
       <div
         formGroupName="persona_data"
-        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
       >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 gap-2 sm:gap-0">
+          <h2 class="text-lg sm:text-xl font-semibold text-gray-700 dark:text-gray-200">
             Conversation Examples
           </h2>
           <button
@@ -374,13 +374,13 @@
             type="button"
             (click)="addConversation()"
             [disabled]="conversations.length >= maxConversationExamples"
-            class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
+            class="w-full sm:w-auto px-2 sm:px-3 py-1 text-xs sm:text-sm bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
           >
             Add Example
           </button>
         </div>
 
-        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
+        <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
           Sample conversations that help your digital twin respond appropriately
           to user messages.
         </p>
@@ -388,13 +388,13 @@
         <!-- Conversation List -->
         <div
           formArrayName="conversations"
-          class="space-y-4 max-h-96 overflow-y-auto p-1"
+          class="space-y-3 sm:space-y-4 max-h-64 sm:max-h-96 overflow-y-auto p-1"
         >
           <div
             *ngIf="conversations.length === 0"
-            class="text-center py-8 bg-gray-50 dark:bg-gray-700 rounded-md"
+            class="text-center py-6 sm:py-8 bg-gray-50 dark:bg-gray-700 rounded-md"
           >
-            <p class="text-gray-500 dark:text-gray-400">
+            <p class="text-gray-500 dark:text-gray-400 text-sm">
               No conversation examples added yet.
             </p>
           </div>
@@ -407,7 +407,7 @@
             <!-- Conversation Header -->
             <div
               [formGroupName]="i"
-              class="flex justify-between items-center px-4 py-3 cursor-pointer"
+              class="flex justify-between items-center px-3 sm:px-4 py-2 sm:py-3 cursor-pointer"
               [ngClass]="{
                 'bg-gray-50 dark:bg-gray-700': activeConversationIndex !== i,
                 'bg-blue-50 dark:bg-blue-900': activeConversationIndex === i
@@ -416,7 +416,7 @@
             >
               <div class="flex items-center">
                 <span
-                  class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold mr-2"
+                  class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs font-semibold mr-2"
                   [ngClass]="{
                     'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
                       activeConversationIndex !== i,
@@ -426,7 +426,7 @@
                 >
                   {{ i + 1 }}
                 </span>
-                <h3 class="font-medium text-gray-800 dark:text-gray-200">
+                <h3 class="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200 truncate max-w-[120px] sm:max-w-xs md:max-w-sm">
                   {{
                     (conversation.get("question")?.value | slice : 0 : 50) ||
                       "New Example"
@@ -445,11 +445,11 @@
                   (click)="removeConversation(i, $event)"
                   class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none"
                 >
-                  <i class="fa fa-trash"></i>
+                  <i class="fa fa-trash text-xs sm:text-sm"></i>
                 </button>
 
                 <i
-                  class="fa"
+                  class="fa text-xs sm:text-sm"
                   [ngClass]="{
                     'fa-chevron-down': activeConversationIndex !== i,
                     'fa-chevron-up': activeConversationIndex === i
@@ -462,18 +462,18 @@
             <div
               *ngIf="activeConversationIndex === i"
               [formGroupName]="i"
-              class="px-4 py-3 border-t border-gray-200 dark:border-gray-700"
+              class="px-3 sm:px-4 py-2 sm:py-3 border-t border-gray-200 dark:border-gray-700"
             >
-              <div class="mb-4">
+              <div class="mb-3 sm:mb-4">
                 <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >Question</label
                 >
                 <textarea
                   formControlName="question"
                   [readonly]="!isEditMode"
                   rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
                   placeholder="What someone might ask your digital twin..."
                 ></textarea>
@@ -500,7 +500,7 @@
                     conversation.get('question')?.touched &&
                     conversation.get('question')?.invalid
                   "
-                  class="text-red-500 dark:text-red-400 text-sm mt-1"
+                  class="text-red-500 dark:text-red-400 text-xs mt-1"
                 >
                   <span
                     *ngIf="conversation.get('question')?.errors?.['required']"
@@ -516,14 +516,14 @@
 
               <div>
                 <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  class="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >Answer</label
                 >
                 <textarea
                   formControlName="answer"
                   [readonly]="!isEditMode"
                   rows="4"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                   [ngClass]="{ 'bg-gray-100 dark:bg-gray-800': !isEditMode }"
                   placeholder="How your digital twin should respond..."
                 ></textarea>
@@ -550,7 +550,7 @@
                     conversation.get('answer')?.touched &&
                     conversation.get('answer')?.invalid
                   "
-                  class="text-red-500 dark:text-red-400 text-sm mt-1"
+                  class="text-red-500 dark:text-red-400 text-xs mt-1"
                 >
                   <span *ngIf="conversation.get('answer')?.errors?.['required']"
                     >Answer is required</span
@@ -568,7 +568,7 @@
         <!-- Progress Counter -->
         <div
           *ngIf="conversations.length > 0"
-          class="mt-4 text-right text-sm text-gray-500 dark:text-gray-400"
+          class="mt-3 sm:mt-4 text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400"
         >
           {{ conversations.length }} /
           {{ maxConversationExamples }} conversation examples
@@ -577,18 +577,18 @@
 
       <!-- Actions Area -->
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
         *ngIf="!isEditMode"
       >
-        <h2 class="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-700 dark:text-gray-200">
           Additional Actions
         </h2>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
           <button
             type="button"
             (click)="duplicateTwin()"
-            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <i class="fa fa-copy mr-2"></i> Duplicate Twin
           </button>
@@ -596,7 +596,7 @@
           <button
             type="button"
             (click)="openDeleteConfirmation()"
-            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            class="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <i class="fa fa-trash mr-2"></i> Delete Twin
           </button>

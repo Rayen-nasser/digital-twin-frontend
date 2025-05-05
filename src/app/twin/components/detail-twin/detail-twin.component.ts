@@ -68,12 +68,12 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
           this.populateForm(twin);
           this.isLoading = false;
         },
-        error: (err) => {
-          this.error = 'Failed to load twin details. Please try again later.';
-          this.isLoading = false;
-          console.error('Error loading twin details:', err);
-          this.handleNotification('error', 'Load Failed', 'Error loading twin details.');
-        }
+        // error: (err) => {
+        //   this.error = 'Failed to load twin details. Please try again later.';
+        //   this.isLoading = false;
+        //   console.error('Error loading twin details:', err);
+        //   this.handleNotification('error', 'Load Failed', 'Error loading twin details.');
+        // }
       });
   }
 
@@ -226,7 +226,7 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
   }
 
   chatWithTwin(): void {
-    this.router.navigate(['/chat', this.twinId]);
+    this.router.navigate(['/chat/dashboard']);
   }
 
   goBack(): void {
