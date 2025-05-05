@@ -13,7 +13,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/service/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
-import { User } from '../../../interfaces/user.interface';
+import { User } from '../../../chat/models/user.interface';
 
 @Component({
   selector: 'app-header',
@@ -47,10 +47,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
-    this.isDarkMode = this.themeService.isDarkMode();
+    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
 
-    this.themeSubscription = this.themeService.darkMode$.subscribe((isDark) => {
-      this.isDarkMode = isDark;
+    this.themeSubscription = this.themeService.theme$.subscribe((theme) => {
+      this.isDarkMode = theme === 'dark';
       this.cdr.detectChanges();
     });
 
@@ -162,7 +162,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toggleDarkMode(): void {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   getUserInitials(): string {
