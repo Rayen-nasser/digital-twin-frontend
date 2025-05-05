@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "e-learning": {
+    "digital-twin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -24,7 +24,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/e-learning",
+            "outputPath": "dist/digital-twin",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -102,10 +102,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "e-learning:build:production"
+              "buildTarget": "digital-twin:build:production"
             },
             "development": {
-              "buildTarget": "e-learning:build:development"
+              "buildTarget": "digital-twin:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -113,7 +113,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "e-learning:build"
+            "buildTarget": "digital-twin:build"
           }
         },
         "test": {
