@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { BehaviorSubject, map, Observable, of, shareReplay, finalize, tap, catchError, throwError } from 'rxjs';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { isPlatformBrowser } from '@angular/common';
-import { User } from '../../interfaces/user.interface';
+import { User } from '../../chat/models/user.interface';
 
 @Injectable({
   providedIn: 'root',
