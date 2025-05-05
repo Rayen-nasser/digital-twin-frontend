@@ -4,7 +4,7 @@ import { AuthService } from '../../../auth/service/auth.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { ThemeService } from '../../../core/services/theme.service';
+import { Theme, ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-forgotten-password',
@@ -49,8 +49,8 @@ export class ForgottenPasswordComponent implements OnInit {
   }
 
   setupThemeListener(): void {
-    this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeService.theme$.subscribe((theme: Theme) => {
+      this.isDarkMode = theme === 'dark';
       this.cdr.detectChanges();
     });
   }
@@ -116,7 +116,7 @@ export class ForgottenPasswordComponent implements OnInit {
   }
 
   toggleTheme(): void {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   // Method to validate email field and show appropriate error message

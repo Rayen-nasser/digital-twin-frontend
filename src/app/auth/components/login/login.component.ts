@@ -5,7 +5,7 @@ import { from } from 'rxjs';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../service/auth.service';
-import { ThemeService } from '../../../core/services/theme.service';
+import { Theme, ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -36,16 +36,16 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     // Check the current theme
-    this.isDarkMode = this.themeService.isDarkMode();
+    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
 
     // Subscribe to theme changes
-    this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeService.theme$.subscribe((theme: Theme) => {
+      this.isDarkMode = theme === 'dark';
     });
   }
 
   toggleTheme(): void {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
 

@@ -55,8 +55,8 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   }
 
   setupThemeListener(): void {
-    this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeService.theme$.subscribe(theme => {
+      this.isDarkMode = theme === 'dark';
       this.cdr.detectChanges();
     });
   }
@@ -190,7 +190,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   }
 
   toggleTheme(): void {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   togglePasswordVisibility(): void {

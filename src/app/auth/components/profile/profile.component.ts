@@ -2,11 +2,11 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../auth/service/auth.service';
-import { ThemeService } from '../../../core/services/theme.service';
+import { Theme, ThemeService } from '../../../core/services/theme.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { Router } from '@angular/router';
 import { finalize, take } from 'rxjs/operators';
-import { User } from '../../../interfaces/user.interface';
+import { User } from '../../../chat/models/user.interface';
 
 @Component({
   selector: 'app-profile',
@@ -42,7 +42,6 @@ export class ProfileComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.isDarkMode = this.themeService.isDarkMode();
 
     // Subscribe to user updates
     this.authService.user$.subscribe(user => {
@@ -57,8 +56,8 @@ export class ProfileComponent implements OnInit {
       this.loadUserProfile();
     }
 
-    this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeService.theme$.subscribe((theme: Theme) => {
+      this.isDarkMode = theme === 'dark';
       this.cdr.detectChanges();
     });
 

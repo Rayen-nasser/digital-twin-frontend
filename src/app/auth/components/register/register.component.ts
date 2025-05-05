@@ -43,20 +43,19 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     // Check the current theme
-    this.isDarkMode = this.themeService.isDarkMode();
+    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
 
     // Subscribe to theme changes
-    this.themeService.darkMode$.subscribe(isDark => {
-      this.isDarkMode = isDark;
+    this.themeService.theme$.subscribe(theme => {
+      this.isDarkMode = theme === 'dark';
     });
   }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
-
   toggleTheme(): void {
-    this.themeService.toggleDarkMode();
+    this.themeService.toggleTheme();
   }
 
   onFileChange(event: Event): void {
