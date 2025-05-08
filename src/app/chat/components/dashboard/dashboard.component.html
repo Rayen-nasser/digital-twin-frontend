@@ -1,0 +1,344 @@
+<!-- Main app container with responsive layout and dark mode support -->
+<div
+  class="flex h-screen w-screen overflow-hidden bg-gray-100 dark:bg-gray-900 transition-colors duration-200"
+>
+  <!-- Sidebar with chat list -->
+  <div
+    class="w-full lg:w-80 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-md transition-all duration-300"
+    [class.hidden]="mobileView && (currentChatId$ | async) && !sidebarOpen"
+    [class.fixed]="mobileView"
+    [class.left-0]="mobileView"
+    [class.right-0]="mobileView"
+    [class.bottom-0]="mobileView"
+    [class.z-40]="mobileView"
+  >
+    <!-- Top bar with back button -->
+    <div
+      class="flex items-center p-3 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
+    >
+      <!-- Back button - Now placed at the top of sidebar -->
+      <button
+        (click)="goBack()"
+        class="p-2 mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors duration-200 flex items-center justify-center"
+        aria-label="Go back"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+      </button>
+
+      <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        Messages
+      </h1>
+
+      <!-- New Chat button - Now as an icon button in the top bar -->
+      <button
+        (click)="createNewChat()"
+        class="ml-auto p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200"
+        aria-label="Create new chat"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- User profile section -->
+    <div
+      class="p-3 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
+    >
+      <!-- User profile card -->
+      <div
+        class="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm transition-colors duration-200"
+      >
+        <!-- User avatar and info -->
+        <div
+          *ngIf="user$ | async as user; else defaultProfile"
+          class="relative"
+        >
+          <!-- User avatar -->
+          <div
+            *ngIf="user.profile_image; else userInitial"
+            class="h-12 w-12 rounded-full overflow-hidden ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-800"
+          >
+            <img
+              [src]="user.profile_image"
+              alt="User profile"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <ng-template #userInitial>
+            <div
+              class="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-lg shadow-sm"
+            >
+              {{ user.username.charAt(0) || "U" }}
+            </div>
+          </ng-template>
+          <!-- Online status -->
+          <div
+            class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-800"
+          ></div>
+        </div>
+
+        <ng-template #defaultProfile>
+          <div
+            class="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-lg shadow-sm"
+          >
+            U
+          </div>
+        </ng-template>
+
+        <!-- User info -->
+        <div class="flex-1 min-w-0">
+          <h2
+            *ngIf="user$ | async as user"
+            class="text-base font-semibold text-gray-800 dark:text-gray-100 truncate"
+          >
+            {{ user.username }}
+          </h2>
+          <p
+            *ngIf="user$ | async as user"
+            class="text-xs text-gray-500 dark:text-gray-400 truncate"
+          >
+            {{ user.email || "Welcome to Messages" }}
+          </p>
+        </div>
+
+        <!-- Settings button -->
+        <button
+          (click)="toggleSettingsMenu()"
+          class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-all duration-200"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div
+      class="p-3 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
+    >
+      <div class="relative">
+        <input
+          type="text"
+          placeholder="Search conversations"
+          class="w-full py-2.5 pl-10 pr-4 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm transition-all duration-200"
+        />
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+          <svg
+            class="w-5 h-5 text-gray-500 dark:text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat list with category tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <div class="flex px-3 -mb-px">
+        <button
+          class="flex-1 py-3 px-1 text-sm font-medium text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 dark:border-blue-400 transition-colors duration-200"
+        >
+          Recent
+        </button>
+        <button
+          class="flex-1 py-3 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+        >
+          Unread
+        </button>
+        <button
+          class="flex-1 py-3 px-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+        >
+          Archived
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat list -->
+    <div class="flex-1 overflow-y-auto">
+      <app-chat-list
+        [chats]="chats$ | async"
+        [currentChatId]="currentChatId$ | async"
+        (selectChat)="onChatSelected($event)"
+      >
+      </app-chat-list>
+
+      <!-- Empty state when no chats -->
+      <div
+        *ngIf="(chats$ | async)?.length === 0"
+        class="flex flex-col items-center justify-center py-12 px-4 text-center"
+      >
+        <div
+          class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3"
+        >
+          <svg
+            class="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            ></path>
+          </svg>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          No conversations yet
+        </p>
+        <button
+          (click)="createNewChat()"
+          class="mt-3 px-4 py-2 bg-blue-500 text-white text-sm rounded-full hover:bg-blue-600 transition-colors duration-200 shadow-sm"
+        >
+          Start a new chat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main chat area -->
+  <div
+    class="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
+    [class.hidden]="mobileView && !(currentChatId$ | async)"
+  >
+    <ng-container
+      *ngIf="currentChatId$ | async as currentChatId; else noChatSelected"
+    >
+      <app-chat-window
+        [messages]="messages$ | async"
+        [currentChatId]="currentChatId"
+        class="flex-1 flex flex-col overflow-hidden"
+      >
+      </app-chat-window>
+
+      <!-- Chat input -->
+      <app-chat-input
+        [isConnected]="isWebSocketConnected"
+        (sendMessage)="onSendMessage($event)"
+        class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200"
+      >
+      </app-chat-input>
+    </ng-container>
+
+    <ng-template #noChatSelected>
+      <!-- Empty state -->
+      <div
+        class="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
+      >
+        <div class="text-center max-w-md px-6">
+          <div
+            class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center transition-colors duration-200 shadow-inner"
+          >
+            <svg
+              class="w-14 h-14 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              ></path>
+            </svg>
+          </div>
+          <h3
+            class="text-2xl font-medium text-gray-700 dark:text-gray-200 mb-3 transition-colors duration-200"
+          >
+            Your Messages
+          </h3>
+          <p
+            class="text-gray-500 dark:text-gray-400 mb-6 transition-colors duration-200"
+          >
+            Select a conversation or start a new chat to begin messaging
+          </p>
+          <button
+            (click)="createNewChat()"
+            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:shadow-md hover:scale-105 transition-all duration-200"
+          >
+            <div class="flex items-center justify-center">
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                ></path>
+              </svg>
+              <span>New Message</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Settings Menu Component -->
+  <app-settings-menu
+    [isOpen]="settingsMenuOpen"
+    [currentUser]="user$ | async"
+    (close)="closeSettingsMenu()"
+  >
+  </app-settings-menu>
+</div>
