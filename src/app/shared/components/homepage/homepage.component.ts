@@ -2,6 +2,8 @@ import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter, Subject, takeUntil } from 'rxjs';
 import { SharedService } from '../../service/shared.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-homepage',
@@ -19,11 +21,25 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
   displayPages: (number|string)[] = [];
   Math = Math;
 
+  contactForm: FormGroup;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private sharedService: SharedService
-  ) {}
+    private sharedService: SharedService,
+    private toasterService: ToastrService,
+    private fb: FormBuilder
+  ) {
+    this.contactForm = this.fb.group({
+      name: [
+        '',
+        [Validators.required, Validators.minLength(3), Validators.maxLength(100)]
+      ],
+      email: ['', [Validators.required, Validators.email]],
+      subject: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      message: ['', ]
+    });
+  }
 
   ngOnInit(): void {
     // Listen for navigation events that might contain fragments
@@ -72,7 +88,7 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
     // Scroll to the top of the twins section
     this.scrollToSection('services');
   }
-  
+
   updateDisplayPages(): void {
     this.displayPages = [];
 
@@ -136,5 +152,20 @@ export class HomePageComponent implements OnInit, AfterViewInit, OnDestroy {
       rect.top <= 100 &&
       rect.bottom >= 100
     );
+  }
+
+  submitContactForm(): void {
+    if (this.contactForm.valid) {
+      this.sharedService.addContact(this.contactForm.value).subscribe(
+        (response: any) => {
+          this.contactForm.reset();
+          this.toasterService.success('Message sent successfully');
+        },
+        (error) => {
+          this.toasterService.error('Failed to send message');
+          console.error('Error adding contact:', error);
+        }
+      );
+    }
   }
 }

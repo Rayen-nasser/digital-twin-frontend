@@ -505,7 +505,7 @@
             Send Us a Message
           </h3>
 
-          <form>
+          <form [formGroup]="contactForm">
             <div class="mb-4">
               <label
                 for="name"
@@ -515,6 +515,7 @@
               <input
                 type="text"
                 id="name"
+                formControlName="name"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                 placeholder="John Doe"
               />
@@ -529,6 +530,7 @@
               <input
                 type="email"
                 id="email"
+                formControlName="email"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                 placeholder="john@example.com"
               />
@@ -542,6 +544,7 @@
               >
               <input
                 type="text"
+                formControlName="subject"
                 id="subject"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                 placeholder="How can we help?"
@@ -557,6 +560,7 @@
               <textarea
                 id="message"
                 rows="4"
+                formControlName="message"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                 placeholder="Tell us what you need..."
               ></textarea>
@@ -564,6 +568,8 @@
 
             <button
               type="submit"
+              [disabled]="!contactForm.valid"
+              (click)="submitContactForm()"
               class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 transition-colors"
             >
               Send Message
