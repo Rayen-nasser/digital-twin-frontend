@@ -168,7 +168,7 @@
               class="twin-avatar"
               [ngStyle]="{
                 'background-image': twin.avatar_url
-                  ? 'url(' + twin.avatar_url + ')'
+                  ? 'url(' + encodeURI(twin.avatar_url) + ')'
                   : 'none'
               }"
             >

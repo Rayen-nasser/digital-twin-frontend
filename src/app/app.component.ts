@@ -14,7 +14,7 @@ export class AppComponent {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const urlAfterRedirects = event.urlAfterRedirects || '';
-        this.showHeaderFooter = !urlAfterRedirects.startsWith('/auth/');
+        this.showHeaderFooter = !['/auth/', '/chat'].some(prefix => urlAfterRedirects.startsWith(prefix));
       }
     });
   }

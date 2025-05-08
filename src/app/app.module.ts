@@ -13,6 +13,7 @@ import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core.module';
 import { AuthService } from './auth/service/auth.service';
 import { TwinModule } from './twin/twin.module';
+import { ChatModule } from './chat/chat.module';
 
 
 export function initializeApp(authService: AuthService) {
@@ -34,7 +35,8 @@ export function initializeApp(authService: AuthService) {
     AuthModule,
     SharedModule,
     CoreModule,
-    TwinModule
+    TwinModule,
+    ChatModule
   ],
   providers: [
     provideClientHydration(),

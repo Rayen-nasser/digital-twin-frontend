@@ -7,6 +7,7 @@ import { TwinService, Twin, TwinListResponse } from '../../service/twin.service'
 import { ThemeService } from '../../../core/services/theme.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { ToastrService } from 'ngx-toastr';
+import { ChatService } from '../../../chat/services/chat.service';
 
 @Component({
   selector: 'app-list-twin',
@@ -81,7 +82,8 @@ export class ListTwinComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private themeService: ThemeService,
-    private toastService: ToastrService
+    private toastService: ToastrService,
+    private chatService: ChatService
   ) {
     this.filterForm = this.createFilterForm();
   }
@@ -446,9 +448,38 @@ export class ListTwinComponent implements OnInit, OnDestroy {
 
     return pages;
   }
+  encodeURI(url: string) {
+    return window.encodeURI(url);
+  }
 
-  chatWithTwin(_t109: Twin,$event: MouseEvent) {
-      $event.stopPropagation();
-      this.router.navigate(['/chat/dashboard']);
-    }
+  chatWithTwin(twin: Twin, $event: MouseEvent) {
+    $event.stopPropagation();
+
+    this.chatService.getChatByTwin(twin.id).subscribe({
+      next: (existingChat: any) => {
+        if (existingChat) {
+          this.router.navigate(['/chat/dashboard']);
+        } else {
+          const payload = {
+            twin: twin.id
+          };
+
+          this.chatService.CreateChat(payload).subscribe({
+            next: (response: any) => {
+              console.log('Chat created:', response);
+              this.router.navigate(['/chat/dashboard']);
+            },
+            error: (error: any) => {
+              console.error('Error creating chat:', error);
+              this.toastService.error('Failed to create chat');
+            }
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error checking existing chat:', error);
+        this.toastService.error('Failed to check existing chat');
+      }
+    });
+  }
 }
