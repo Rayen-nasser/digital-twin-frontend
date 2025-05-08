@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class SharedService {
-  private apiUrl = environment.apiUrl + '/twin';
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient
@@ -15,6 +15,14 @@ export class SharedService {
   getTwins(
     params: any
   ){
-    return this.http.get(this.apiUrl);
+    return this.http.get(this.apiUrl + '/twin');
+  }
+
+  addSubscribe(email: string){
+    return this.http.post(this.apiUrl + '/subscribes/', {email});
+  }
+
+  addContact(data: any){
+    return this.http.post(this.apiUrl + '/contacts/',data);
   }
 }
