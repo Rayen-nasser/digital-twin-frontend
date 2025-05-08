@@ -1,0 +1,81 @@
+.message-container {
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.message-bubble {
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.message-actions {
+  // Position these buttons properly for different message types
+  transform: translateY(-50%);
+  padding: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+
+  :host-context(.dark-mode) & {
+    background-color: rgba(55, 65, 81, 0.9);
+  }
+}
+
+.context-menu {
+  top: 100%;
+  z-index: 10;
+}
+
+.reactions-panel {
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.reaction-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reaction-btn {
+  transition: transform 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+// Styling for message reply info
+.message-reply-info {
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    left: -0.5rem;
+    top: 0;
+    bottom: 0.5rem;
+    width: 2px;
+    background-color: #d1d5db;
+
+    :host-context(.dark-mode) & {
+      background-color: #4b5563;
+    }
+  }
+}
+
+// Image message styling
+.image-message {
+  img {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+}
