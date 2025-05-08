@@ -1,0 +1,90 @@
+<div class="flex flex-col h-full">
+  <!-- Chat header -->
+  <div class="flex items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+    <button class="mr-2 p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors dark:text-gray-200" (click)="showChatList()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    <div *ngIf="currentChat?.twin_details?.avatar_url; else defaultAvatar"
+         class="w-10 h-10 rounded-full bg-cover bg-center"
+         [style.background-image]="'url(' + encodeURI(currentChat?.twin_details?.avatar_url ?? '') + ')'">
+    </div>
+    <ng-template #defaultAvatar>
+      <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+        {{ currentChat?.twin_details?.twin_name?.charAt(0)?.toUpperCase() || '' }}
+      </div>
+    </ng-template>
+
+    <div class="ml-3 flex-1">
+      <h3 class="text-lg font-medium text-gray-800 dark:text-gray-100">{{ currentChat?.twin_details?.twin_name }}</h3>
+      <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+        <span *ngIf="currentChat?.twin_is_active" class="flex items-center">
+          <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+          Online
+        </span>
+        <span *ngIf="!currentChat?.twin_is_active">Last seen {{ formatLastSeen(currentChat?.last_active) }}</span>
+      </div>
+    </div>
+
+    <!-- Options button -->
+    <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none dark:text-gray-300" (click)="toggleOptions()">
+      <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Messages container -->
+  <div #messagesContainer class="flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-gray-900" (scroll)="onScroll($event)">
+    <!-- Loading older messages indicator -->
+    <div *ngIf="isLoadingOlderMessages" class="flex justify-center py-3">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-500 dark:border-gray-400"></div>
+    </div>
+
+    <div *ngIf="displayMessages.length > 0; else noMessages">
+      <ng-container *ngFor="let group of groupMessagesByDate(displayMessages)">
+        <!-- Date separator -->
+        <div class="flex justify-center my-4">
+          <div class="px-4 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs text-gray-700 dark:text-gray-300">
+            {{ formatDate(group.date) }}
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <ng-container *ngFor="let message of group.messages; let i = index">
+          <app-message
+            [message]="message"
+            [isFirstInSequence]="i === 0 || group.messages[i-1].is_from_user !== message.is_from_user"
+            [twinName]="currentChat?.twin_details?.twin_name || ''"
+            [twinAvatarUrl]="currentChat?.twin_details?.avatar_url ? encodeURI(currentChat?.twin_details?.avatar_url) : null"
+            [isDarkMode]="isDarkMode"
+            >
+          </app-message>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <ng-template #noMessages>
+      <div class="flex flex-col items-center justify-center h-full">
+        <svg class="w-16 h-16 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <p class="mt-4 text-gray-500 dark:text-gray-400">No messages yet</p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm">Send a message to start the conversation</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Typing indicator -->
+  <div *ngIf="isTyping" class="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex items-center text-gray-600 dark:text-gray-300 text-sm">
+      <div class="flex space-x-1">
+        <div class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+        <div class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 200ms"></div>
+        <div class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" style="animation-delay: 400ms"></div>
+      </div>
+      <span class="ml-2">{{ currentChat?.twin_details?.twin_name }} is typing...</span>
+    </div>
+  </div>
+</div>
