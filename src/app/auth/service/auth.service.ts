@@ -10,10 +10,7 @@ import { User } from '../../chat/models/user.interface';
   providedIn: 'root',
 })
 export class AuthService {
-  requestPasswordReset(email: string): Observable<any> {
-    // Replace with actual HTTP request implementation
-    return this.httpClient.post('/api/password-reset', { email });
-  }
+
 
   private apiUrl = environment.apiUrl + '/auth';
   private isAuthenticated = new BehaviorSubject<boolean>(false);
@@ -253,6 +250,11 @@ export class AuthService {
   // Change password
   changePassword(passwordData: { old_password: string, new_password: string }): Observable<any> {
     return this.httpClient.post(`${this.apiUrl}/change-password/`, passwordData);
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    // Replace with actual HTTP request implementation
+    return this.httpClient.post(this.apiUrl + '/password-reset/', { email });
   }
 
   // Request password reset

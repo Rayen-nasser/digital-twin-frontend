@@ -8,7 +8,6 @@ import { ChatInputComponent } from './components/chat-input/chat-input.component
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from "../shared/shared.module";
-import { ChatViewComponent } from './components/chat-view/chat-view.component';
 import { MessageComponent } from './components/message/message.component';
 
 @NgModule({
@@ -18,7 +17,6 @@ import { MessageComponent } from './components/message/message.component';
     ChatInputComponent,
     DashboardComponent,
     MessageComponent,
-    // ChatViewComponent,
   ],
   imports: [CommonModule, ChatRoutingModule, FormsModule, SharedModule],
 })
