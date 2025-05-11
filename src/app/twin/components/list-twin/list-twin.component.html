@@ -11,6 +11,7 @@
       </button>
       <button
         class="tab-button"
+        *ngIf="isAuthenticated"
         [class.active]="selectedViewMode === 'mine'"
         (click)="setViewMode('mine')"
       >
@@ -31,7 +32,9 @@
           class="fa"
           [ngClass]="showFilters ? 'fa-filter-slash' : 'fa-filter'"
         ></i>
-        <span class="button-text">{{ showFilters ? "Hide Filters" : "Show Filters" }}</span>
+        <span class="button-text">{{
+          showFilters ? "Hide Filters" : "Show Filters"
+        }}</span>
       </button>
       <button class="primary-button create-button" (click)="createNewTwin()">
         <i class="fa fa-plus"></i> <span class="button-text">Create Twin</span>
