@@ -13,12 +13,15 @@ import {
 import { WebsocketService } from '../../services/websocket.service';
 import { Observable } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
+import { ChatService } from '../../services/chat.service';
 
 interface Attachment {
   type: 'image' | 'audio' | 'file';
   name: string;
   url: string;
   size?: number;
+  isPlaying?: boolean; // Added for audio playback state
+  duration?: any; // Added for audio duration
 }
 
 @Component({
@@ -52,6 +55,9 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
   private mediaRecorder!: MediaRecorder;
   private audioChunks: Blob[] = [];
   private mediaStream: MediaStream | null = null;
+
+  // Audio playback
+  private audioPlayer: HTMLAudioElement | null = null;
 
   // Attachments
   attachments: Attachment[] = [];
@@ -95,6 +101,8 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // Clean up media resources
     this.closeMediaStream();
+    // Stop any playing audio
+    this.stopAllAudio();
     // Remove resize listener
     window.removeEventListener('resize', this.checkScreenSize.bind(this));
   }
@@ -147,6 +155,9 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
       for (const attachment of this.attachments) {
         this.sendMessage.emit(attachment);
       }
+
+      // Stop any playing audio before clearing
+      this.stopAllAudio();
 
       // Clear state
       this.message = '';
@@ -235,9 +246,10 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
         this.attachments.push({
           type: 'audio',
           name: `Voice Message (${this.formatRecordingTime(this.recordingTime)})`,
-          url: audioUrl
+          url: audioUrl,
+          duration: this.recordingTime,
+          isPlaying: false
         });
-
         // Clean up media stream
         this.closeMediaStream();
       };
@@ -306,7 +318,48 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   removeAttachment(index: number): void {
+    // Stop audio if it's playing
+    if (this.attachments[index].type === 'audio' && this.attachments[index].isPlaying) {
+      this.stopAllAudio();
+    }
     this.attachments.splice(index, 1);
+  }
+
+  // Toggle audio playback
+  toggleAudioPlayback(index: number): void {
+    const audioAttachment = this.attachments[index];
+
+    // First stop any currently playing audio
+    this.stopAllAudio();
+
+    // Then play the selected audio if it wasn't already playing
+    if (!audioAttachment.isPlaying) {
+      this.audioPlayer = new Audio(audioAttachment.url);
+      audioAttachment.isPlaying = true;
+
+      this.audioPlayer.play();
+
+      // Handle playback ended
+      this.audioPlayer.onended = () => {
+        audioAttachment.isPlaying = false;
+      };
+    }
+  }
+
+  // Stop all audio playback
+  stopAllAudio(): void {
+    // Stop audio player if exists
+    if (this.audioPlayer) {
+      this.audioPlayer.pause();
+      this.audioPlayer = null;
+    }
+
+    // Reset isPlaying flags
+    this.attachments.forEach(attachment => {
+      if (attachment.type === 'audio') {
+        attachment.isPlaying = false;
+      }
+    });
   }
 
   // Clean up media stream resources
