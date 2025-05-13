@@ -1,7 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, switchMap, tap, filter, catchError, finalize, distinctUntilChanged } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import {
+  map,
+  switchMap,
+  tap,
+  filter,
+  catchError,
+  finalize,
+  distinctUntilChanged,
+} from 'rxjs/operators';
 import { Chat } from '../models/chat.model';
 import { Message } from '../models/message.model';
 import { environment } from '../../../environments/environment';
@@ -15,9 +23,9 @@ export class ChatService {
 
   // State management
   private currentChatIdSubject = new BehaviorSubject<string | null>(null);
-  public currentChatId$ = this.currentChatIdSubject.asObservable().pipe(
-    distinctUntilChanged()
-  );
+  public currentChatId$ = this.currentChatIdSubject
+    .asObservable()
+    .pipe(distinctUntilChanged());
 
   private chatsSubject = new BehaviorSubject<Chat[]>([]);
   public chats$ = this.chatsSubject.asObservable();
@@ -39,10 +47,7 @@ export class ChatService {
   private messageDeduplicationCache = new Set<string>();
   readonly currentChat$ = this.currentChatIdSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private wsService: WebsocketService
-  ) {
+  constructor(private http: HttpClient, private wsService: WebsocketService) {
     this.setupWebSocketListeners();
     this.setupChatSelectionListener();
   }
@@ -50,30 +55,30 @@ export class ChatService {
   // Initialize websocket listeners
   private setupWebSocketListeners(): void {
     // Connection status
-    this.wsService.connectionStatus().subscribe(connected => {
+    this.wsService.connectionStatus().subscribe((connected) => {
       console.log('WebSocket connection status:', connected);
     });
 
     // New messages
-    this.wsService.newMessages().subscribe(message => {
+    this.wsService.newMessages().subscribe((message) => {
       if (message) this.handleNewMessage(message);
     });
 
     // Typing indicators
-    this.wsService.typingIndicator().subscribe(isTyping => {
+    this.wsService.typingIndicator().subscribe((isTyping) => {
       this.typingIndicatorSubject.next(isTyping);
     });
   }
 
   // Setup chat selection listener
   private setupChatSelectionListener(): void {
-    this.currentChatId$.pipe(
-      filter(chatId => chatId !== null)
-    ).subscribe(chatId => {
-      if (chatId && !this.wsService.isConnected()) {
-        this.wsService.connect(chatId);
-      }
-    });
+    this.currentChatId$
+      .pipe(filter((chatId) => chatId !== null))
+      .subscribe((chatId) => {
+        if (chatId && !this.wsService.isConnected()) {
+          this.wsService.connect(chatId);
+        }
+      });
   }
 
   // Get the current chat ID
@@ -95,7 +100,7 @@ export class ChatService {
         const sortedChats = this.sortChatsByLastActive(chats);
         this.chatsSubject.next(sortedChats);
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error loading chats:', error);
         return of([]);
       }),
@@ -112,7 +117,7 @@ export class ChatService {
     });
   }
 
-  CreateChat(data: {twin: string }): Observable<any> {
+  CreateChat(data: { twin: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/chats/`, data);
   }
 
@@ -120,69 +125,78 @@ export class ChatService {
   getMessages(chatId: string, pageSize: number = 25): Observable<any> {
     this.loadingMessagesSubject.next(true);
 
-    return this.http.get<any>(
-      `${this.apiUrl}/messages/chat_history/?chat=${chatId}&page_size=${pageSize}`
-    ).pipe(
-      catchError(error => {
-        console.error('Error fetching messages:', error);
-        return of({ results: [], next: null });
-      }),
-      finalize(() => this.loadingMessagesSubject.next(false))
-    );
+    return this.http
+      .get<any>(
+        `${this.apiUrl}/messages/chat_history/?chat=${chatId}&page_size=${pageSize}`
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching messages:', error);
+          return of({ results: [], next: null });
+        }),
+        finalize(() => this.loadingMessagesSubject.next(false))
+      );
   }
 
   // Get messages using cursor-based pagination
-  getMessagesByCursor(chatId: string, cursor: string, pageSize: number = 25): Observable<any> {
+  getMessagesByCursor(
+    chatId: string,
+    cursor: string,
+    pageSize: number = 25
+  ): Observable<any> {
     this.loadingMessagesSubject.next(true);
 
-    return this.http.get<any>(
-      `${this.apiUrl}/messages/chat_history/?chat=${chatId}&cursor=${cursor}&page_size=${pageSize}`
-    ).pipe(
-      catchError(error => {
-        console.error('Error fetching messages by cursor:', error);
-        return of({ results: [], next: null });
-      }),
-      finalize(() => this.loadingMessagesSubject.next(false))
-    );
+    return this.http
+      .get<any>(
+        `${this.apiUrl}/messages/chat_history/?chat=${chatId}&cursor=${cursor}&page_size=${pageSize}`
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching messages by cursor:', error);
+          return of({ results: [], next: null });
+        }),
+        finalize(() => this.loadingMessagesSubject.next(false))
+      );
   }
 
   // Fetch messages for a specific chat
   loadMessages(chatId: string): Observable<Message[]> {
     this.loadingMessagesSubject.next(true);
     this.messageDeduplicationCache.clear();
-    this.messagesSubject.next([]);  // Clear messages before loading new ones
+    this.messagesSubject.next([]); // Clear messages before loading new ones
 
-    return this.http.get<any>(`${this.apiUrl}/messages/chat_history/?chat=${chatId}`).pipe(
-      map((response) => response.results || response),
-      tap((messages) => {
-        // Fix: Sort messages by date (oldest first for display)
-        const sortedMessages = this.sortMessagesByTimestamp(messages);
-        sortedMessages.forEach(msg => {
-          if (msg.id) this.messageDeduplicationCache.add(msg.id);
-        });
+    return this.http
+      .get<any>(`${this.apiUrl}/messages/chat_history/?chat=${chatId}`)
+      .pipe(
+        map((response) => response.results || response),
+        tap((messages) => {
+          // Fix: Sort messages by date (oldest first for display)
+          const sortedMessages = this.sortMessagesByTimestamp(messages);
+          sortedMessages.forEach((msg) => {
+            if (msg.id) this.messageDeduplicationCache.add(msg.id);
+          });
 
-        this.messagesSubject.next(sortedMessages);
-        this.currentChatIdSubject.next(chatId);
-      }),
-      catchError(error => {
-        console.error('Error loading messages:', error);
-        return of([]);
-      }),
-      finalize(() => this.loadingMessagesSubject.next(false))
-    );
+          this.messagesSubject.next(sortedMessages);
+          this.currentChatIdSubject.next(chatId);
+        }),
+        catchError((error) => {
+          console.error('Error loading messages:', error);
+          return of([]);
+        }),
+        finalize(() => this.loadingMessagesSubject.next(false))
+      );
   }
 
   // Mark messages as read
   markMessagesAsRead(chatId: string): Observable<any> {
-    return this.http.post(
-      `${this.apiUrl}/chats/${chatId}/mark_messages_read/`,
-      {}
-    ).pipe(
-      catchError(error => {
-        console.error('Error marking messages as read:', error);
-        return of(null);
-      })
-    );
+    return this.http
+      .post(`${this.apiUrl}/chats/${chatId}/mark_messages_read/`, {})
+      .pipe(
+        catchError((error) => {
+          console.error('Error marking messages as read:', error);
+          return of(null);
+        })
+      );
   }
 
   // Send a message
@@ -220,7 +234,10 @@ export class ChatService {
   }
 
   // Ensure WebSocket connection
-  private ensureWebSocketConnection(chatId: string, onConnected: () => void): void {
+  private ensureWebSocketConnection(
+    chatId: string,
+    onConnected: () => void
+  ): void {
     if (this.wsService.isConnected()) {
       onConnected();
       return;
@@ -265,7 +282,7 @@ export class ChatService {
         this.wsService.connect(chatId);
         this.markMessagesAsRead(chatId).subscribe();
       },
-      error: (error) => console.error('Error loading messages:', error)
+      error: (error) => console.error('Error loading messages:', error),
     });
   }
 
@@ -292,16 +309,19 @@ export class ChatService {
 
     // For user messages, replace any matching temp message
     if (message.is_from_user) {
-      const tempMessageIndex = existingMessages.findIndex(msg =>
-        msg.id?.startsWith('temp-') &&
-        msg.text_content === message.text_content &&
-        msg.is_from_user === true
+      const tempMessageIndex = existingMessages.findIndex(
+        (msg) =>
+          msg.id?.startsWith('temp-') &&
+          msg.text_content === message.text_content &&
+          msg.is_from_user === true
       );
 
       if (tempMessageIndex >= 0) {
         const updatedMessages = [...existingMessages];
         updatedMessages[tempMessageIndex] = message;
-        this.messagesSubject.next(this.sortMessagesByTimestamp(updatedMessages));
+        this.messagesSubject.next(
+          this.sortMessagesByTimestamp(updatedMessages)
+        );
       } else {
         this.addMessageToList(message);
       }
@@ -321,7 +341,7 @@ export class ChatService {
   // Get a specific chat by ID
   getChat(chatId: string): Observable<Chat> {
     return this.http.get<Chat>(`${this.apiUrl}/chats/${chatId}/`).pipe(
-      catchError(error => {
+      catchError((error) => {
         console.error('Error getting chat:', error);
         return of({} as Chat);
       })
@@ -330,22 +350,24 @@ export class ChatService {
 
   // Create a new chat with an AI assistant
   createChat(assistantId: string): Observable<Chat> {
-    return this.http.post<Chat>(`${this.apiUrl}/chats/`, {
-      twin_id: assistantId
-    }).pipe(
-      tap(newChat => {
-        const currentChats = this.chatsSubject.value;
-        this.chatsSubject.next([newChat, ...currentChats]);
-      }),
-      switchMap(newChat => {
-        this.selectChat(newChat.id);
-        return this.getChat(newChat.id);
-      }),
-      catchError(error => {
-        console.error('Error creating chat:', error);
-        return of({} as Chat);
+    return this.http
+      .post<Chat>(`${this.apiUrl}/chats/`, {
+        twin_id: assistantId,
       })
-    );
+      .pipe(
+        tap((newChat) => {
+          const currentChats = this.chatsSubject.value;
+          this.chatsSubject.next([newChat, ...currentChats]);
+        }),
+        switchMap((newChat) => {
+          this.selectChat(newChat.id);
+          return this.getChat(newChat.id);
+        }),
+        catchError((error) => {
+          console.error('Error creating chat:', error);
+          return of({} as Chat);
+        })
+      );
   }
 
   // Update user typing status
@@ -368,15 +390,16 @@ export class ChatService {
     const currentMessages = this.messagesSubject.value;
 
     // Check if message already exists
-    const messageExists = currentMessages.some(msg =>
-      msg.id === message.id ||
-      (msg.id?.startsWith('temp-') &&
-       msg.text_content === message.text_content &&
-       msg.is_from_user === message.is_from_user)
+    const messageExists = currentMessages.some(
+      (msg) =>
+        msg.id === message.id ||
+        (msg.id?.startsWith('temp-') &&
+          msg.text_content === message.text_content &&
+          msg.is_from_user === message.is_from_user)
     );
 
     if (!messageExists) {
-      const updatedMessages = [...currentMessages, message];  // Add to end for chronological order
+      const updatedMessages = [...currentMessages, message]; // Add to end for chronological order
       this.messagesSubject.next(this.sortMessagesByTimestamp(updatedMessages));
     }
   }
@@ -421,12 +444,14 @@ export class ChatService {
   }
 
   translateMessage(chatId: string, messageId: string): Observable<Message> {
-    return this.http.post<Message>(`${this.apiUrl}/messages/${messageId}/translate/`, {}).pipe(
-      catchError(error => {
-        console.error('Error translating message:', error);
-        return of({} as Message);
-      })
-    );
+    return this.http
+      .post<Message>(`${this.apiUrl}/messages/${messageId}/translate/`, {})
+      .pipe(
+        catchError((error) => {
+          console.error('Error translating message:', error);
+          return of({} as Message);
+        })
+      );
   }
 
   deleteMessage(chatId: string, messageId: string): Observable<any> {
@@ -434,23 +459,29 @@ export class ChatService {
       tap(() => {
         // Remove message from local state
         const currentMessages = this.messagesSubject.value;
-        const updatedMessages = currentMessages.filter(msg => msg.id !== messageId);
+        const updatedMessages = currentMessages.filter(
+          (msg) => msg.id !== messageId
+        );
         this.messagesSubject.next(updatedMessages);
 
         // Remove from deduplication cache
         this.messageDeduplicationCache.delete(messageId);
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('Error deleting message:', error);
         return of(null);
       })
     );
   }
 
-  addReaction(chatId: string, messageId: string, emoji: string): Observable<Message> {
+  addReaction(
+    chatId: string,
+    messageId: string,
+    emoji: string
+  ): Observable<Message> {
     const url = `${this.apiUrl}/messages/${messageId}/reactions/`;
     return this.http.post<Message>(url, { emoji }).pipe(
-      catchError(error => {
+      catchError((error) => {
         console.error('Error adding reaction:', error);
         return of({} as Message);
       })
@@ -493,9 +524,204 @@ export class ChatService {
 
       // Reset deduplication cache with only IDs from recent messages
       this.messageDeduplicationCache.clear();
-      recentMessages.forEach(msg => {
+      recentMessages.forEach((msg) => {
         if (msg.id) this.messageDeduplicationCache.add(msg.id);
       });
+    }
+  }
+
+  /**
+   * Saves a voice message and sends it to the specified chat
+   * @param chatId - The ID of the chat where the message will be sent
+   * @param audioBlob - The audio blob containing the recorded voice message
+   * @param duration - The duration of the voice recording in seconds
+   * @param format - The format of the audio (default: 'audio/webm')
+   * @returns An Observable of the saved message
+   */
+  saveVoiceMessage(
+    chatId: string,
+    audioBlob: Blob,
+    duration: number,
+    format: string = 'audio/webm'
+  ): Observable<Message> {
+    // Validate inputs
+    if (!chatId) {
+      console.error('Invalid chat ID provided to saveVoiceMessage');
+      return throwError(() => new Error('Invalid chat ID'));
+    }
+
+    if (!audioBlob || !(audioBlob instanceof Blob)) {
+      console.error('Invalid audio blob provided to saveVoiceMessage');
+      return throwError(() => new Error('Invalid audio data'));
+    }
+
+    // Validate duration to ensure it's an integer
+    const validDuration = Math.round(duration);
+
+    // Create an optimistic message to improve UI responsiveness
+    const optimisticMessage: Message = {
+      id: 'temp-voice-' + new Date().getTime(),
+      chat: chatId,
+      text_content: '', // Empty for voice messages
+      message_type: 'voice',
+      is_from_user: true,
+      created_at: new Date().toISOString(),
+      is_delivered: false,
+      is_read: false,
+      status: 'sending' as const,
+      status_updated_at: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
+      is_translated: false,
+      reactions: [],
+      voice_note: '' // Placeholder for voice note ID
+    };
+
+    // Add optimistic message to UI
+    this.addMessageToList(optimisticMessage);
+    this.updateChatWithLatestMessage(chatId, optimisticMessage);
+
+    // First upload the voice recording
+    return this.uploadVoiceRecording(audioBlob, validDuration, format).pipe(
+      switchMap((voiceRecording) => {
+        if (!voiceRecording || !voiceRecording.id) {
+          return throwError(() => new Error('Failed to upload voice recording'));
+        }
+
+        // Then create a message with the voice recording ID
+        const messageData = {
+          chat: chatId,
+          message_type: 'voice',
+          is_from_user: true,
+          voice_note: voiceRecording.id,
+          text_content: '', // Empty for voice messages
+          duration_seconds: validDuration, // Use rounded integer
+        };
+
+        // Create the message using the message endpoint
+        return this.http.post<Message>(`${this.apiUrl}/messages/`, messageData).pipe(
+          tap((message) => {
+            // Find and replace the optimistic message with the real one
+            const currentMessages = this.messagesSubject.value;
+            const updatedMessages = currentMessages.map(msg =>
+              msg.id === optimisticMessage.id ? message : msg
+            );
+
+            // Update messages and add to deduplication cache
+            if (message.id) {
+              this.messageDeduplicationCache.add(message.id);
+              this.messageDeduplicationCache.delete(optimisticMessage.id);
+            }
+
+            this.messagesSubject.next(this.sortMessagesByTimestamp(updatedMessages));
+
+            // Update chat with confirmed message
+            this.updateChatWithLatestMessage(chatId, message);
+          }),
+          catchError((error) => {
+            console.error('Error creating voice message:', error);
+
+            // Mark the optimistic message as failed
+            const currentMessages = this.messagesSubject.value;
+            const updatedMessages = currentMessages.map(msg => {
+              if (msg.id === optimisticMessage.id) {
+                return { ...msg, status: 'error' as const };
+              }
+              return msg;
+            });
+
+            this.messagesSubject.next(updatedMessages);
+
+            return throwError(() => new Error('Failed to send voice message'));
+          })
+        );
+      }),
+      catchError((error) => {
+        console.error('Error in voice message upload process:', error);
+
+        // Remove the optimistic message on failure
+        const currentMessages = this.messagesSubject.value;
+        const updatedMessages = currentMessages.filter(msg => msg.id !== optimisticMessage.id);
+        this.messagesSubject.next(updatedMessages);
+
+        // Return a more user-friendly error
+        return throwError(
+          () => new Error('Failed to send voice message. Please try again.')
+        );
+      })
+    );
+  }
+
+  /**
+   * Uploads a voice recording to the server
+   * @param audioBlob - The audio blob to upload
+   * @param duration - The duration in seconds
+   * @param format - The audio format
+   * @returns An Observable of the created voice recording
+   */
+  private uploadVoiceRecording(
+    audioBlob: Blob,
+    duration: number,
+    format: string
+  ): Observable<any> {
+    // Ensure duration is a positive integer
+    const validDuration = Math.max(1, Math.round(duration));
+
+    // Create form data for multipart/form-data upload
+    const formData = new FormData();
+    // Create a file from the blob with a timestamp filename
+    const fileName = `voice_${new Date().getTime()}.webm`;
+    const audioFile = new File([audioBlob], fileName, { type: format });
+
+    // Add the file and metadata to form data
+    formData.append('audio_file', audioFile);
+    formData.append('duration_seconds', validDuration.toString());
+    formData.append('format', format);
+    formData.append('sample_rate', '44100'); // Default sample rate
+
+    // Upload to the voice recordings endpoint
+    return this.http.post<any>(`${this.apiUrl}/voice-recordings/`, formData).pipe(
+      catchError(error => {
+        console.error('Voice recording upload failed:', error);
+        return throwError(() => new Error('Failed to upload voice recording'));
+      })
+    );
+  }
+
+  /**
+   * Helper method to add a message to local state
+   * This keeps the UI in sync with the backend
+   */
+  private addMessageToLocalState(chatId: string, message: Message): void {
+    // Find the chat in the current chats array
+    const chats = this.chatsSubject.value;
+    const chatIndex = chats.findIndex((c) => c.id === chatId);
+
+    if (chatIndex !== -1) {
+      // Add the message to the chat
+      const updatedChats = [...chats];
+      if (!updatedChats[chatIndex].messages) {
+        updatedChats[chatIndex].messages = [];
+      }
+
+      updatedChats[chatIndex].messages.push(message);
+
+      // Update the last message and last active time
+      const displayText = message.message_type === 'voice' ? 'Voice message' : (message.text_content || '');
+
+      updatedChats[chatIndex].last_message = {
+        id: message.id,
+        text_content: displayText,
+        message_type: message.message_type,
+        created_at: new Date().toISOString(),
+        is_from_user: true,
+        is_delivered: false,
+        is_read: false,
+      };
+
+      updatedChats[chatIndex].last_active = new Date().toISOString();
+
+      // Update the BehaviorSubject
+      this.chatsSubject.next(this.sortChatsByLastActive(updatedChats));
     }
   }
 }
