@@ -1,4 +1,5 @@
 export interface Chat {
+  messages: any;
   id: string;
   twin_details?: {
     id: string;
