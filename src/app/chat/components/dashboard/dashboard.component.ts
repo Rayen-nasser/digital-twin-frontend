@@ -1,4 +1,4 @@
-// dashboard.component.ts
+// Fixed dashboard.component.ts with correct voice message handling
 import { Component, OnInit, OnDestroy, HostListener, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
@@ -33,7 +33,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private wsService: WebsocketService,
     private authService: AuthService,
-    private themeService: ThemeService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.chats$ = this.chatService.chats$;
@@ -100,30 +99,89 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * @param payload String message or Attachment object
    */
   onSendMessage(payload: any): void {
-    // For text messages
-    if (typeof payload === 'string') {
-      if (!payload.trim()) return;
-
-      this.currentChatId$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((currentChatId: string | null) => {
-          if (currentChatId) {
-            // Let the ChatService handle both HTTP and WebSocket sending
+    this.currentChatId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((currentChatId: string | null) => {
+        if (currentChatId) {
+          if (typeof payload === 'string') {
+            // Text message handling (already implemented)
             this.chatService.sendMessage(currentChatId, payload).subscribe();
           }
-        });
-    }
-    // For attachment objects
-    else {
-      this.currentChatId$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((currentChatId: string | null) => {
-          if (currentChatId) {
-            // Handle attachment
-            //this.chatService.sendAttachment(currentChatId, payload).subscribe();
+          else if (payload.type === 'audio') {
+            // FIXED: Use the Blob object directly instead of the URL
+            // 1. First, we need to get the actual Blob from the AudioAttachment
+            this.fetchAudioBlob(payload.url).then(audioBlob => {
+              if (audioBlob) {
+                // 2. Now send the actual blob to the server
+                this.chatService.saveVoiceMessage(
+                  currentChatId,
+                  audioBlob,
+                  payload.duration || 0,
+                  payload.format || 'audio/webm'
+                ).subscribe({
+                  next: (response) => console.log('Voice message sent successfully', response),
+                  error: (error) => console.error('Error sending voice message:', error)
+                });
+              } else {
+                console.error('Could not fetch audio blob from URL:', payload.url);
+              }
+            });
           }
+          else {
+            // Other attachment types (for future implementation)
+            console.log('Unsupported attachment type:', payload.type);
+          }
+        }
+      });
+  }
+
+  /**
+   * Fetches the actual Blob object from a blob URL
+   * @param blobUrl - The blob URL to fetch from
+   * @returns Promise resolving to a Blob or null if fetch fails
+   */
+  private fetchAudioBlob(blobUrl: string | Blob): Promise<Blob | null> {
+    // If it's already a Blob object, return it
+    if (blobUrl instanceof Blob) {
+      return Promise.resolve(blobUrl);
+    }
+
+    // If it's a data URL (starts with data:)
+    if (blobUrl.startsWith('data:')) {
+      // Extract the base64 data from the data URL
+      try {
+        const base64 = blobUrl.split(',')[1];
+        const binary = atob(base64);
+        const len = binary.length;
+        const buffer = new ArrayBuffer(len);
+        const view = new Uint8Array(buffer);
+
+        for (let i = 0; i < len; i++) {
+          view[i] = binary.charCodeAt(i);
+        }
+
+        // Determine the content type from the data URL
+        const contentType = blobUrl.split(';')[0].split(':')[1] || 'audio/webm';
+        return Promise.resolve(new Blob([buffer], { type: contentType }));
+      } catch (e) {
+        console.error('Error converting data URL to Blob:', e);
+        return Promise.resolve(null);
+      }
+    }
+
+    // If it's a blob URL (starts with blob:)
+    if (blobUrl.startsWith('blob:')) {
+      return fetch(blobUrl)
+        .then(response => response.blob())
+        .catch(error => {
+          console.error('Error fetching blob from URL:', error);
+          return null;
         });
     }
+
+    // If it's neither a blob URL nor a data URL, return null
+    console.error('Invalid URL format:', blobUrl);
+    return Promise.resolve(null);
   }
 
   // Go back to chat list in mobile view
