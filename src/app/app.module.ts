@@ -14,6 +14,7 @@ import { CoreModule } from './core/core.module';
 import { AuthService } from './auth/service/auth.service';
 import { TwinModule } from './twin/twin.module';
 import { ChatModule } from './chat/chat.module';
+import { WebsocketService } from './chat/services/websocket.service';
 
 
 export function initializeApp(authService: AuthService) {
@@ -39,13 +40,14 @@ export function initializeApp(authService: AuthService) {
     ChatModule
   ],
   providers: [
-    provideClientHydration(),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeApp,
-      deps: [AuthService],
-      multi: true
-    }
+    // provideClientHydration(),
+    // {
+    //   provide: APP_INITIALIZER,
+    //   useFactory: initializeApp,
+    //   deps: [AuthService],
+    //   multi: true
+    // },
+    WebsocketService
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
