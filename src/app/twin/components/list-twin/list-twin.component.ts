@@ -78,7 +78,7 @@ export class ListTwinComponent implements OnInit, OnDestroy {
     { value: '', label: 'All Privacy Levels' },
     { value: 'public', label: 'Public' },
     { value: 'private', label: 'Private' },
-    { value: 'unlisted', label: 'Unlisted' },
+    { value: 'shared', label: 'Shared' },
   ];
 
   activeOptions = [
