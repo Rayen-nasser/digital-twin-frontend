@@ -28,7 +28,7 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
   privacyOptions = [
     { value: 'private', label: 'Private (Only you can see and chat)' },
     { value: 'public', label: 'Public (Anyone can see and chat)' },
-    { value: 'unlisted', label: 'Unlisted (Only those with the link can see and chat)' }
+    { value: 'shared', label: 'Shared (Shared with selected users)' }
   ];
 
   constructor(
