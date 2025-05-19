@@ -27,7 +27,7 @@ export interface Twin {
     file_type: string;
     url: string;
   } | null;
-  privacy_setting: 'public' | 'private' | 'unlisted';
+  privacy_setting: 'public' | 'private' | 'shared';
   created_at: string;
   updated_at: string;
   is_active: boolean;
@@ -53,7 +53,7 @@ export interface TwinStats {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TwinService {
   private apiUrl = `${environment.apiUrl}/twin`;
@@ -65,14 +65,20 @@ export class TwinService {
     let httpParams = new HttpParams();
 
     if (params) {
-      Object.keys(params).forEach(key => {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== undefined &&
+          params[key] !== null &&
+          params[key] !== ''
+        ) {
           httpParams = httpParams.set(key, params[key]);
         }
       });
     }
 
-    return this.http.get<TwinListResponse>(`${this.apiUrl}/`, { params: httpParams });
+    return this.http.get<TwinListResponse>(`${this.apiUrl}/`, {
+      params: httpParams,
+    });
   }
 
   // Get only the current user's twins
@@ -80,14 +86,20 @@ export class TwinService {
     let httpParams = new HttpParams();
 
     if (params) {
-      Object.keys(params).forEach(key => {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== undefined &&
+          params[key] !== null &&
+          params[key] !== ''
+        ) {
           httpParams = httpParams.set(key, params[key]);
         }
       });
     }
 
-    return this.http.get<TwinListResponse>(`${this.apiUrl}/mine/`, { params: httpParams });
+    return this.http.get<TwinListResponse>(`${this.apiUrl}/mine/`, {
+      params: httpParams,
+    });
   }
 
   // Get only public twins
@@ -95,14 +107,20 @@ export class TwinService {
     let httpParams = new HttpParams();
 
     if (params) {
-      Object.keys(params).forEach(key => {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== undefined &&
+          params[key] !== null &&
+          params[key] !== ''
+        ) {
           httpParams = httpParams.set(key, params[key]);
         }
       });
     }
 
-    return this.http.get<TwinListResponse>(`${this.apiUrl}/public/`, { params: httpParams });
+    return this.http.get<TwinListResponse>(`${this.apiUrl}/public/`, {
+      params: httpParams,
+    });
   }
 
   // Get a single twin by ID
@@ -132,7 +150,10 @@ export class TwinService {
 
   // Update just the persona data
   updatePersonaData(id: string, personaData: any): Observable<Twin> {
-    return this.http.patch<Twin>(`${this.apiUrl}/${id}/update_persona/`, personaData);
+    return this.http.patch<Twin>(
+      `${this.apiUrl}/${id}/update_persona/`,
+      personaData
+    );
   }
 
   // Create a copy of a twin
@@ -143,5 +164,12 @@ export class TwinService {
   // Get statistics about twins (admin only)
   getStats(): Observable<TwinStats> {
     return this.http.get<TwinStats>(`${this.apiUrl}/stats/`);
+  }
+
+  shareTwin(
+    twin_id: string,
+    shareData: { user_email: any; expires_in_days: any }
+  ) {
+    return this.http.post<any>(`${this.apiUrl}/${twin_id}/share/`, shareData);
   }
 }
