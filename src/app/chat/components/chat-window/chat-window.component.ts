@@ -27,25 +27,27 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
   @Input() messages: Message[] | null = [];
   @Input() currentChatId: string | null = null;
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef;
-  isDarkMode: boolean = false;
 
-  private themeSubscription: Subscription | null = null;
+  // Properties
+  isDarkMode: boolean = false;
   currentChat: Chat | null = null;
   displayMessages: Message[] = [];
   isTyping = false;
   isLoadingOlderMessages = false;
   hasMoreMessages = true;
   showOptions = false;
-  lastScrollTop = 0;
-  scrollToBottomOnNextRender = false;
   isNearBottom = true;
-
-  private destroy$ = new Subject<void>();
-  private initialMessagesLoaded = false;
   nextCursor: string | null = null;
-  messageIds = new Set<string>();
+
+  // Private properties
+  private destroy$ = new Subject<void>();
+  private themeSubscription: Subscription | null = null;
+  private initialMessagesLoaded = false;
+  private messageIds = new Set<string>();
   private scrollLocked = false;
   private scrollEvents = new Subject<Event>();
+  private lastScrollTop = 0;
+  private scrollToBottomOnNextRender = false;
 
   constructor(
     private chatService: ChatService,
@@ -56,203 +58,28 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
   ) {}
 
   ngOnInit(): void {
-    // Initialize the dark mode state
-    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
-
-    // Subscribe to theme changes
-    this.themeSubscription = this.themeService.theme$.subscribe(theme => {
-      this.isDarkMode = theme === 'dark';
-      this.cdr.detectChanges();
-    });
-
-    // Set up debounced scroll handler to prevent excessive API calls
-    this.scrollEvents.pipe(
-      takeUntil(this.destroy$),
-      debounceTime(200) // Wait 200ms after last scroll event
-    ).subscribe(event => this.handleScrollEvent(event));
-
-    if (this.currentChatId && !this.wsService.isConnected()) {
-      this.wsService.connect(this.currentChatId);
-    }
-
-    // Handle WebSocket messages
-    this.wsService.messages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => {
-        if (message.type === 'read_receipt' && message['message_ids']) {
-          message['message_ids'].forEach((id: string) => {
-            const msgIndex = this.displayMessages.findIndex(m => m.id === id);
-            if (msgIndex >= 0) {
-              this.displayMessages[msgIndex].is_read = true;
-              this.displayMessages[msgIndex].status = 'read';
-            }
-          });
-          this.cdr.detectChanges();
-        }
-      });
-
-    // Handle typing indicators
-    this.wsService.typingIndicator()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((isTyping) => {
-        this.isTyping = isTyping;
-        if (this.isTyping && this.isNearBottom) {
-          this.scrollToBottomOnNextRender = true;
-          this.cdr.detectChanges();
-        }
-      });
-
-    // Handle new messages
-    this.wsService.newMessages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => {
-        if (!message) return;
-
-        // Ensure proper date handling
-        this.ensureMessageDates(message);
-
-        const existingIndex = this.displayMessages.findIndex(m => m.id === message.id);
-
-        if (existingIndex >= 0) {
-          this.displayMessages[existingIndex] = { ...message };
-        } else if (message.is_from_user) {
-          const tempIndex = this.displayMessages.findIndex(
-            m => m.id?.startsWith('temp-') && (m.text_content === message.text_content)
-          );
-
-          if (tempIndex >= 0) {
-            this.displayMessages[tempIndex] = { ...message };
-          } else {
-            this.displayMessages = [...this.displayMessages, message];
-          }
-        } else {
-          this.displayMessages = [...this.displayMessages, message];
-
-          // Auto-scroll only if we're near the bottom when receiving a new message
-          if (this.isNearBottom) {
-            this.scrollToBottomOnNextRender = true;
-          }
-        }
-
-        // Sort messages by creation time
-        this.sortMessages();
-        this.cdr.detectChanges();
-      });
-
-    // Subscribe to chat service's messages
-    this.chatService.messages$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(messages => {
-        if (messages && messages.length > 0) {
-          // Process messages
-          const processedMessages = messages.map(msg => this.ensureMessageDates(msg));
-
-          // Update messageIds set
-          processedMessages.forEach(msg => {
-            if (msg.id) this.messageIds.add(msg.id);
-          });
-
-          this.displayMessages = processedMessages;
-          this.sortMessages();
-
-          if (!this.initialMessagesLoaded) {
-            this.initialMessagesLoaded = true;
-            this.scrollToBottomOnNextRender = true;
-          }
-
-          this.cdr.detectChanges();
-        }
-      });
+    this.initializeTheme();
+    this.setupScrollHandler();
+    this.connectWebsocket();
+    this.setupWebsocketListeners();
+    this.subscribeToChatMessages();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentChatId'] && this.currentChatId) {
-      this.initialMessagesLoaded = false;
-      this.hasMoreMessages = true;
-      this.nextCursor = null;
-      this.messageIds.clear();
-      this.displayMessages = [];
-
-      // Load chat details
-      this.chatService.getChat(this.currentChatId).subscribe({
-        next: (chat: any) => {
-          this.currentChat = chat;
-          this.cdr.detectChanges();
-        },
-        error: (error) => console.error('Error loading chat details:', error)
-      });
-
-      // Ensure websocket connection
-      if (!this.wsService.isConnected()) {
-        this.wsService.connect(this.currentChatId);
-      }
-
-      // Load initial messages
+      this.resetChatState();
+      this.loadChatDetails();
+      this.connectWebsocket();
       this.loadInitialMessages();
     }
 
     if (changes['messages'] && this.messages && this.messages.length > 0) {
-      // Ensure all messages have proper dates
-      const processedMessages = [...this.messages].map(msg => {
-        return this.ensureMessageDates(msg);
-      });
-
-      // Update messageIds set
-      processedMessages.forEach(msg => {
-        if (msg.id) this.messageIds.add(msg.id);
-      });
-
-      this.displayMessages = processedMessages;
-      this.sortMessages();
-
-      if (!this.initialMessagesLoaded && this.displayMessages.length > 0) {
-        this.initialMessagesLoaded = true;
-        this.scrollToBottomOnNextRender = true;
-      }
-
-      this.cdr.detectChanges();
+      this.processIncomingMessages(this.messages);
     }
-  }
-
-    encodeURI(url: string) {
-    return window.encodeURI(url);
-  }
-
-  loadInitialMessages(): void {
-    if (!this.currentChatId) return;
-
-    this.chatService.getMessages(this.currentChatId, 30).subscribe({
-      next: (response) => {
-        if (response && response.results) {
-          // Process messages
-          const processedMessages = response.results.map((msg: any) => this.ensureMessageDates(msg));
-
-          // Update message IDs set
-          processedMessages.forEach((msg: any) => {
-            if (msg.id) this.messageIds.add(msg.id);
-          });
-
-          this.displayMessages = processedMessages;
-          this.sortMessages();
-
-          // Set next cursor for pagination
-          this.nextCursor = response.next ? this.extractCursor(response.next) : null;
-          this.hasMoreMessages = !!this.nextCursor;
-
-          this.initialMessagesLoaded = true;
-          this.scrollToBottomOnNextRender = true;
-          this.cdr.detectChanges();
-        }
-      },
-      error: (error) => {
-        console.error('Error loading initial messages:', error);
-      }
-    });
   }
 
   ngAfterViewChecked(): void {
     if (this.scrollToBottomOnNextRender) {
-      // Use NgZone to avoid ExpressionChangedAfterItHasBeenCheckedError
       this.ngZone.runOutsideAngular(() => {
         setTimeout(() => {
           this.scrollToBottom();
@@ -262,30 +89,22 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     }
   }
 
-  // Ensure message has valid date properties
-  ensureMessageDates(message: Message): Message {
-    const now = new Date().toISOString();
-
-    // Make sure created_at exists and is valid
-    if (!message.created_at || isNaN(new Date(message.created_at).getTime())) {
-      message.created_at = message.timestamp || now;
+  ngOnDestroy(): void {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
     }
-
-    // Make sure timestamp exists and is valid
-    if (!message.timestamp || isNaN(new Date(message.timestamp).getTime())) {
-      message.timestamp = message.created_at || now;
-    }
-
-    return message;
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  // Sort messages by date
-  sortMessages(): void {
-    this.displayMessages.sort((a, b) => {
-      const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
-      const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
-      return timeA - timeB;
-    });
+  // Public methods
+  onScroll(event: Event): void {
+    this.scrollEvents.next(event);
+    this.checkIfNearBottom(event);
+  }
+
+  encodeURI(url: string): string {
+    return window.encodeURI(url);
   }
 
   scrollToBottom(): void {
@@ -301,39 +120,79 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     }
   }
 
-  onScroll(event: Event): void {
-    // Enqueue scroll event for debounced processing
-    this.scrollEvents.next(event);
+  groupMessagesByDate(messages: Message[]): { date: string; messages: Message[] }[] {
+    if (!messages || messages.length === 0) return [];
 
-    // Update bottom detection immediately
-    this.checkIfNearBottom(event);
+    const grouped: { [key: string]: Message[] } = {};
+
+    messages.forEach((message) => {
+      const dateStr = message.created_at || message.timestamp;
+      if (!dateStr) return;
+
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
+
+      const dateKey = date.toLocaleDateString();
+      grouped[dateKey] = grouped[dateKey] || [];
+      grouped[dateKey].push(message);
+    });
+
+    return Object.keys(grouped)
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+      .map((date) => ({
+        date,
+        messages: grouped[date].sort((a, b) => {
+          const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
+          const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
+          return timeA - timeB;
+        }),
+      }));
   }
 
-  private checkIfNearBottom(event: Event): void {
-    const element = event.target as HTMLElement;
-    const threshold = 100; // pixels from bottom to consider "near bottom"
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unknown Date';
 
-    this.isNearBottom =
-      (element.scrollHeight - element.scrollTop - element.clientHeight) < threshold;
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
   }
 
-  private handleScrollEvent(event: Event): void {
-    if (this.scrollLocked) return;
+  formatLastSeen(dateString?: string): string {
+    if (!dateString) return 'a while ago';
 
-    const element = event.target as HTMLElement;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'a while ago';
 
-    // Check if we're near the top and scrolling upward
-    if (
-      element.scrollTop < 150 &&
-      element.scrollTop < this.lastScrollTop &&
-      this.hasMoreMessages &&
-      !this.isLoadingOlderMessages &&
-      this.nextCursor
-    ) {
-      this.loadOlderMessages();
-    }
+    const now = new Date();
+    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    this.lastScrollTop = element.scrollTop;
+    if (diffSeconds < 60) return 'just now';
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)} min ago`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)} hour${Math.floor(diffSeconds / 3600) > 1 ? 's' : ''} ago`;
+
+    return date.toLocaleDateString();
+  }
+
+  onTypingStarted(isTyping: boolean): void {
+    this.wsService.sendTypingIndicator(isTyping);
+  }
+
+  toggleOptions(): void {
+    this.showOptions = !this.showOptions;
+  }
+
+  showChatList(): void {
+    this.chatService.selectChat('');
   }
 
   loadOlderMessages(): void {
@@ -392,7 +251,213 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     });
   }
 
-  // Helper to extract cursor from next URL
+  // Private methods
+  private initializeTheme(): void {
+    this.isDarkMode = this.themeService.getCurrentTheme() === 'dark';
+    this.themeSubscription = this.themeService.theme$.subscribe(theme => {
+      this.isDarkMode = theme === 'dark';
+      this.cdr.detectChanges();
+    });
+  }
+
+  private setupScrollHandler(): void {
+    this.scrollEvents.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(200)
+    ).subscribe(event => this.handleScrollEvent(event));
+  }
+
+  private connectWebsocket(): void {
+    if (this.currentChatId && !this.wsService.isConnected()) {
+      this.wsService.connect(this.currentChatId);
+    }
+  }
+
+  private setupWebsocketListeners(): void {
+    // Handle read receipts
+    this.wsService.messages()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((message) => {
+        if (message.type === 'read_receipt' && message['message_ids']) {
+          message['message_ids'].forEach((id: string) => {
+            const msgIndex = this.displayMessages.findIndex(m => m.id === id);
+            if (msgIndex >= 0) {
+              this.displayMessages[msgIndex].is_read = true;
+              this.displayMessages[msgIndex].status = 'read';
+            }
+          });
+          this.cdr.detectChanges();
+        }
+      });
+
+    // Handle typing indicators
+    this.wsService.typingIndicator()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isTyping) => {
+        this.isTyping = isTyping;
+        if (this.isTyping && this.isNearBottom) {
+          this.scrollToBottomOnNextRender = true;
+          this.cdr.detectChanges();
+        }
+      });
+
+    // Handle new messages
+    this.wsService.newMessages()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((message) => {
+        if (!message) return;
+
+        this.ensureMessageDates(message);
+        const existingIndex = this.displayMessages.findIndex(m => m.id === message.id);
+
+        if (existingIndex >= 0) {
+          this.displayMessages[existingIndex] = { ...message };
+        } else if (message.is_from_user) {
+          const tempIndex = this.displayMessages.findIndex(
+            m => m.id?.startsWith('temp-') && (m.text_content === message.text_content)
+          );
+
+          if (tempIndex >= 0) {
+            this.displayMessages[tempIndex] = { ...message };
+          } else {
+            this.displayMessages = [...this.displayMessages, message];
+          }
+        } else {
+          this.displayMessages = [...this.displayMessages, message];
+          if (this.isNearBottom) {
+            this.scrollToBottomOnNextRender = true;
+          }
+        }
+
+        this.sortMessages();
+        this.cdr.detectChanges();
+      });
+  }
+
+  private subscribeToChatMessages(): void {
+    this.chatService.messages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(messages => {
+        if (messages && messages.length > 0) {
+          this.processIncomingMessages(messages);
+        }
+      });
+  }
+
+  private processIncomingMessages(messages: Message[]): void {
+    const processedMessages = messages.map(msg => this.ensureMessageDates(msg));
+
+    processedMessages.forEach(msg => {
+      if (msg.id) this.messageIds.add(msg.id);
+    });
+
+    this.displayMessages = processedMessages;
+    this.sortMessages();
+
+    if (!this.initialMessagesLoaded && this.displayMessages.length > 0) {
+      this.initialMessagesLoaded = true;
+      this.scrollToBottomOnNextRender = true;
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private resetChatState(): void {
+    this.initialMessagesLoaded = false;
+    this.hasMoreMessages = true;
+    this.nextCursor = null;
+    this.messageIds.clear();
+    this.displayMessages = [];
+  }
+
+  private loadChatDetails(): void {
+    if (!this.currentChatId) return;
+
+    this.chatService.getChat(this.currentChatId).subscribe({
+      next: (chat: any) => {
+        this.currentChat = chat;
+        this.cdr.detectChanges();
+      },
+      error: (error) => console.error('Error loading chat details:', error)
+    });
+  }
+
+  private loadInitialMessages(): void {
+    if (!this.currentChatId) return;
+
+    this.chatService.getMessages(this.currentChatId, 30).subscribe({
+      next: (response) => {
+        if (response && response.results) {
+          const processedMessages = response.results.map((msg: any) => this.ensureMessageDates(msg));
+
+          processedMessages.forEach((msg: any) => {
+            if (msg.id) this.messageIds.add(msg.id);
+          });
+
+          this.displayMessages = processedMessages;
+          this.sortMessages();
+
+          this.nextCursor = response.next ? this.extractCursor(response.next) : null;
+          this.hasMoreMessages = !!this.nextCursor;
+
+          this.initialMessagesLoaded = true;
+          this.scrollToBottomOnNextRender = true;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => console.error('Error loading initial messages:', error)
+    });
+  }
+
+  private ensureMessageDates(message: Message): Message {
+    const now = new Date().toISOString();
+
+    if (!message.created_at || isNaN(new Date(message.created_at).getTime())) {
+      message.created_at = message.timestamp || now;
+    }
+
+    if (!message.timestamp || isNaN(new Date(message.timestamp).getTime())) {
+      message.timestamp = message.created_at || now;
+    }
+
+    return message;
+  }
+
+  private sortMessages(): void {
+    this.displayMessages.sort((a, b) => {
+      const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
+      const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
+      return timeA - timeB;
+    });
+  }
+
+  private checkIfNearBottom(event: Event): void {
+    const element = event.target as HTMLElement;
+    const threshold = 100; // pixels from bottom to consider "near bottom"
+
+    this.isNearBottom =
+      (element.scrollHeight - element.scrollTop - element.clientHeight) < threshold;
+  }
+
+  private handleScrollEvent(event: Event): void {
+    if (this.scrollLocked) return;
+
+    const element = event.target as HTMLElement;
+
+    // Check if we're near the top and scrolling upward
+    if (
+      element.scrollTop < 150 &&
+      element.scrollTop < this.lastScrollTop &&
+      this.hasMoreMessages &&
+      !this.isLoadingOlderMessages &&
+      this.nextCursor
+    ) {
+      this.loadOlderMessages();
+    }
+
+    this.lastScrollTop = element.scrollTop;
+  }
+
   private extractCursor(nextUrl: string): string | null {
     try {
       const url = new URL(nextUrl);
@@ -401,116 +466,5 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
       console.error('Invalid URL format for cursor', nextUrl);
       return null;
     }
-  }
-
-  groupMessagesByDate(messages: Message[]): { date: string; messages: Message[] }[] {
-    if (!messages || messages.length === 0) return [];
-
-    const grouped: { [key: string]: Message[] } = {};
-
-    messages.forEach((message) => {
-      // Use created_at with fallback to timestamp
-      const dateStr = message.created_at || message.timestamp;
-      if (!dateStr) return;
-
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return; // Skip invalid dates
-
-      const dateKey = date.toLocaleDateString();
-      grouped[dateKey] = grouped[dateKey] || [];
-      grouped[dateKey].push(message);
-    });
-
-    return Object.keys(grouped)
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-      .map((date) => ({
-        date,
-        messages: grouped[date].sort((a, b) => {
-          const timeA = new Date(a.created_at || a.timestamp || 0).getTime();
-          const timeB = new Date(b.created_at || b.timestamp || 0).getTime();
-          return timeA - timeB;
-        }),
-      }));
-  }
-
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Unknown Date';
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  }
-
-  formatTime(dateString: string): string {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-
-    return date.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  formatLastSeen(dateString?: string): string {
-    if (!dateString) return 'a while ago';
-
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'a while ago';
-
-    const now = new Date();
-    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffSeconds < 60) return 'just now';
-    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)} min ago`;
-    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)} hour${Math.floor(diffSeconds / 3600) > 1 ? 's' : ''} ago`;
-
-    return date.toLocaleDateString();
-  }
-
-  formatMessageContent(text_content: string): string {
-    if (!text_content) return '';
-
-    // Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    text_content = text_content.replace(
-      urlRegex,
-      '<a href="$1" target="_blank" class="text-blue-600 underline">$1</a>'
-    );
-
-    // Convert line breaks to <br> tags
-    text_content = text_content.replace(/\n/g, '<br>');
-
-    return text_content;
-  }
-
-  onTypingStarted(isTyping: boolean): void {
-    this.wsService.sendTypingIndicator(isTyping);
-  }
-
-  toggleOptions(): void {
-    this.showOptions = !this.showOptions;
-  }
-
-  ngOnDestroy(): void {
-    if (this.themeSubscription) {
-      this.themeSubscription.unsubscribe();
-    }
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  // Go back to chat list in mobile view
-  showChatList(): void {
-    this.chatService.selectChat('');
   }
 }
