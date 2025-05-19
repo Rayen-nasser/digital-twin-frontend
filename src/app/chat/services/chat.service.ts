@@ -86,9 +86,23 @@ export class ChatService {
     return this.currentChatIdSubject.value;
   }
 
-  getChatByTwin(twinId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/chats/?twin=${twinId}`);
-  }
+getChatByTwin(twinId: string): Observable<any> {
+  // No need to pass currentUserId as the backend will use the authenticated user
+  return this.http.get<any>(`${this.apiUrl}/chats/`, {
+    params: { twin: twinId }
+  }).pipe(
+    map(response => {
+      // Check if any results were returned
+      if (response.results && response.results.length > 0) {
+        // Chat exists, return the first chat object
+        return response.results[0];
+      } else {
+        // No chat exists between this user and twin
+        return null;
+      }
+    })
+  );
+}
 
   // Fetch all chats
   loadChats(): Observable<Chat[]> {
@@ -348,43 +362,6 @@ export class ChatService {
     );
   }
 
-  // Create a new chat with an AI assistant
-  createChat(assistantId: string): Observable<Chat> {
-    return this.http
-      .post<Chat>(`${this.apiUrl}/chats/`, {
-        twin_id: assistantId,
-      })
-      .pipe(
-        tap((newChat) => {
-          const currentChats = this.chatsSubject.value;
-          this.chatsSubject.next([newChat, ...currentChats]);
-        }),
-        switchMap((newChat) => {
-          this.selectChat(newChat.id);
-          return this.getChat(newChat.id);
-        }),
-        catchError((error) => {
-          console.error('Error creating chat:', error);
-          return of({} as Chat);
-        })
-      );
-  }
-
-  // Update user typing status
-  updateTypingStatus(isTyping: boolean): void {
-    if (this.wsService.isConnected()) {
-      this.wsService.sendTypingIndicator(isTyping);
-      return;
-    }
-
-    const currentChatId = this.currentChatIdSubject.value;
-    if (currentChatId) {
-      this.ensureWebSocketConnection(currentChatId, () => {
-        this.wsService.sendTypingIndicator(isTyping);
-      });
-    }
-  }
-
   // Add a message to the messages list
   private addMessageToList(message: Message): void {
     const currentMessages = this.messagesSubject.value;
@@ -443,16 +420,6 @@ export class ChatService {
     });
   }
 
-  translateMessage(chatId: string, messageId: string): Observable<Message> {
-    return this.http
-      .post<Message>(`${this.apiUrl}/messages/${messageId}/translate/`, {})
-      .pipe(
-        catchError((error) => {
-          console.error('Error translating message:', error);
-          return of({} as Message);
-        })
-      );
-  }
 
   deleteMessage(chatId: string, messageId: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/messages/${messageId}/`).pipe(
@@ -474,60 +441,10 @@ export class ChatService {
     );
   }
 
-  addReaction(
-    chatId: string,
-    messageId: string,
-    emoji: string
-  ): Observable<Message> {
-    const url = `${this.apiUrl}/messages/${messageId}/reactions/`;
-    return this.http.post<Message>(url, { emoji }).pipe(
-      catchError((error) => {
-        console.error('Error adding reaction:', error);
-        return of({} as Message);
-      })
-    );
-  }
-
   // Reset messages state (e.g., when switching chats)
   resetMessages(): void {
     this.messagesSubject.next([]);
     this.messageDeduplicationCache.clear();
-  }
-
-  // Process and handle a new incoming message (e.g. from WebSocket)
-  processIncomingMessage(message: Message): void {
-    // Skip if we've already seen this message
-    if (message.id && this.messageDeduplicationCache.has(message.id)) {
-      return;
-    }
-
-    // Add to deduplication cache
-    if (message.id) {
-      this.messageDeduplicationCache.add(message.id);
-    }
-
-    // Add to messages
-    const currentMessages = this.messagesSubject.value;
-    const updatedMessages = [...currentMessages, message];
-    this.messagesSubject.next(this.sortMessagesByTimestamp(updatedMessages));
-  }
-
-  // Clean up old messages from cache (call periodically or when changing chats)
-  cleanupMessageCache(): void {
-    // Keep only the most recent N messages to prevent memory leaks
-    const maxCachedMessages = 500;
-    const currentMessages = this.messagesSubject.value;
-
-    if (currentMessages.length > maxCachedMessages) {
-      const recentMessages = currentMessages.slice(-maxCachedMessages);
-      this.messagesSubject.next(recentMessages);
-
-      // Reset deduplication cache with only IDs from recent messages
-      this.messageDeduplicationCache.clear();
-      recentMessages.forEach((msg) => {
-        if (msg.id) this.messageDeduplicationCache.add(msg.id);
-      });
-    }
   }
 
   /**
