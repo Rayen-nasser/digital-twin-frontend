@@ -1,6 +1,6 @@
 // detail-twin.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { takeUntil } from 'rxjs/operators';
@@ -24,6 +24,11 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
   showDeleteModal = false;
   isSaving: boolean = false;
 
+  // Add these properties to your DetailTwinComponent class
+showShareModal = false;
+shareForm: FormGroup;
+isSharing = false;
+
   // Destroy notifier
   private destroy$ = new Subject<void>();
 
@@ -36,6 +41,12 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
     private toastService: ToastrService
   ) {
     super(fb, themeService);
+
+  // Initialize share form
+  this.shareForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    expirationDays: [7, [Validators.required, Validators.min(1), Validators.max(365)]],
+  });
   }
 
   override ngOnInit(): void {
@@ -68,12 +79,6 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
           this.populateForm(twin);
           this.isLoading = false;
         },
-        // error: (err) => {
-        //   this.error = 'Failed to load twin details. Please try again later.';
-        //   this.isLoading = false;
-        //   console.error('Error loading twin details:', err);
-        //   this.handleNotification('error', 'Load Failed', 'Error loading twin details.');
-        // }
       });
   }
 
@@ -228,6 +233,62 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
   chatWithTwin(): void {
     this.router.navigate(['/chat/dashboard']);
   }
+
+// Add these methods to your DetailTwinComponent class
+shareTwin(): void {
+  this.showShareModal = true;
+}
+
+submitShareForm(): void {
+  if (this.shareForm.invalid) {
+    this.markFormGroupTouched(this.shareForm);
+    return;
+  }
+
+  this.isSharing = true;
+
+  const shareData = {
+    user_email: this.shareForm.get('email')?.value,
+    expires_in_days: this.shareForm.get('expirationDays')?.value,
+  };
+
+  // Call your service method to share the twin
+  this.twinService.shareTwin(this.twinId, shareData).subscribe({
+    next: (response: any) => {
+      this.isSharing = false;
+      this.closeShareModal();
+      this.handleNotification('success', 'Twin Shared',
+        `Successfully shared ${this.twin?.name} with ${shareData.user_email}`);
+    },
+    error: (err: any) => {
+      this.isSharing = false;
+      console.error('Error sharing twin:', err);
+      this.handleNotification('error', 'Error Sharing Twin',
+        'Failed to share twin. Please try again.');
+    }
+  });
+}
+
+closeShareModal(): void {
+  this.showShareModal = false;
+  this.shareForm.reset({
+    expirationDays: 7,
+    allowChat: true,
+    allowView: true
+  });
+}
+
+// Helper method to mark all form controls as touched for validation
+  override markFormGroupTouched(formGroup: FormGroup) {
+  Object.values(formGroup.controls).forEach(control => {
+    control.markAsTouched();
+
+    if (control instanceof FormGroup) {
+      this.markFormGroupTouched(control);
+    }
+  });
+}
+
 
   goBack(): void {
     this.router.navigate(['/twin']);
