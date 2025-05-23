@@ -19,6 +19,7 @@ import { WebsocketService } from './websocket.service';
   providedIn: 'root',
 })
 export class ChatService {
+  // API endpoint
   private apiUrl = environment.apiUrl + '/messaging';
 
   // State management
@@ -46,6 +47,10 @@ export class ChatService {
   // Message deduplication cache
   private messageDeduplicationCache = new Set<string>();
   readonly currentChat$ = this.currentChatIdSubject.asObservable();
+
+  // Keep track of the message being replied to
+  private replyToMessageSubject = new BehaviorSubject<Message | null>(null);
+  public replyToMessage$ = this.replyToMessageSubject.asObservable();
 
   constructor(private http: HttpClient, private wsService: WebsocketService) {
     this.setupWebSocketListeners();
@@ -86,23 +91,25 @@ export class ChatService {
     return this.currentChatIdSubject.value;
   }
 
-getChatByTwin(twinId: string): Observable<any> {
-  // No need to pass currentUserId as the backend will use the authenticated user
-  return this.http.get<any>(`${this.apiUrl}/chats/`, {
-    params: { twin: twinId }
-  }).pipe(
-    map(response => {
-      // Check if any results were returned
-      if (response.results && response.results.length > 0) {
-        // Chat exists, return the first chat object
-        return response.results[0];
-      } else {
-        // No chat exists between this user and twin
-        return null;
-      }
-    })
-  );
-}
+  getChatByTwin(twinId: string): Observable<any> {
+    // No need to pass currentUserId as the backend will use the authenticated user
+    return this.http
+      .get<any>(`${this.apiUrl}/chats/`, {
+        params: { twin: twinId },
+      })
+      .pipe(
+        map((response) => {
+          // Check if any results were returned
+          if (response.results && response.results.length > 0) {
+            // Chat exists, return the first chat object
+            return response.results[0];
+          } else {
+            // No chat exists between this user and twin
+            return null;
+          }
+        })
+      );
+  }
 
   // Fetch all chats
   loadChats(): Observable<Chat[]> {
@@ -213,13 +220,23 @@ getChatByTwin(twinId: string): Observable<any> {
       );
   }
 
-  // Send a message
-  sendMessage(chatId: string, text_content: string): Observable<Message> {
+  // Send a message with optional reply functionality
+  sendMessage(
+    chatId: string,
+    text_content: string,
+    replyToMessageId?: string
+  ): Observable<Message> {
+    console.log(
+      'Sending message from chat service:',
+      text_content,
+      replyToMessageId ? `replying to: ${replyToMessageId}` : ''
+    );
+
     if (!text_content.trim()) {
       return of({} as Message);
     }
 
-    // Create optimistic message
+    // Create optimistic message with reply_to field if provided
     const optimisticMessage: Message = {
       id: 'temp-' + new Date().getTime(),
       chat: chatId,
@@ -234,14 +251,25 @@ getChatByTwin(twinId: string): Observable<any> {
       timestamp: new Date().toISOString(),
       is_translated: false,
       reactions: [],
+      user: undefined,
+      content: undefined,
     };
+
+    // Add reply_to if provided
+    if (replyToMessageId) {
+      optimisticMessage.reply_to = replyToMessageId;
+    }
 
     this.addMessageToList(optimisticMessage);
     this.updateChatWithLatestMessage(chatId, optimisticMessage);
 
+    // Clear reply after sending
+    this.setReplyToMessage(null);
+
     // Ensure WebSocket connection
     this.ensureWebSocketConnection(chatId, () => {
-      this.wsService.sendMessage(text_content);
+      // Pass the reply_to ID to the WebSocket service
+      this.wsService.sendMessage(text_content, replyToMessageId);
     });
 
     return of(optimisticMessage);
@@ -420,7 +448,6 @@ getChatByTwin(twinId: string): Observable<any> {
     });
   }
 
-
   deleteMessage(chatId: string, messageId: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/messages/${messageId}/`).pipe(
       tap(() => {
@@ -459,6 +486,7 @@ getChatByTwin(twinId: string): Observable<any> {
     chatId: string,
     audioBlob: Blob,
     duration: number,
+    replyToMessageId?: string,
     format: string = 'audio/webm'
   ): Observable<Message> {
     // Validate inputs
@@ -490,7 +518,10 @@ getChatByTwin(twinId: string): Observable<any> {
       timestamp: new Date().toISOString(),
       is_translated: false,
       reactions: [],
-      voice_note: '' // Placeholder for voice note ID
+      voice_note: '', // Placeholder for voice note ID
+      user: undefined,
+      content: undefined,
+      reply_to: replyToMessageId ? replyToMessageId : undefined,
     };
 
     // Add optimistic message to UI
@@ -501,7 +532,9 @@ getChatByTwin(twinId: string): Observable<any> {
     return this.uploadVoiceRecording(audioBlob, validDuration, format).pipe(
       switchMap((voiceRecording) => {
         if (!voiceRecording || !voiceRecording.id) {
-          return throwError(() => new Error('Failed to upload voice recording'));
+          return throwError(
+            () => new Error('Failed to upload voice recording')
+          );
         }
 
         // Then create a message with the voice recording ID
@@ -515,49 +548,57 @@ getChatByTwin(twinId: string): Observable<any> {
         };
 
         // Create the message using the message endpoint
-        return this.http.post<Message>(`${this.apiUrl}/messages/`, messageData).pipe(
-          tap((message) => {
-            // Find and replace the optimistic message with the real one
-            const currentMessages = this.messagesSubject.value;
-            const updatedMessages = currentMessages.map(msg =>
-              msg.id === optimisticMessage.id ? message : msg
-            );
+        return this.http
+          .post<Message>(`${this.apiUrl}/messages/`, messageData)
+          .pipe(
+            tap((message) => {
+              // Find and replace the optimistic message with the real one
+              const currentMessages = this.messagesSubject.value;
+              const updatedMessages = currentMessages.map((msg) =>
+                msg.id === optimisticMessage.id ? message : msg
+              );
 
-            // Update messages and add to deduplication cache
-            if (message.id) {
-              this.messageDeduplicationCache.add(message.id);
-              this.messageDeduplicationCache.delete(optimisticMessage.id);
-            }
-
-            this.messagesSubject.next(this.sortMessagesByTimestamp(updatedMessages));
-
-            // Update chat with confirmed message
-            this.updateChatWithLatestMessage(chatId, message);
-          }),
-          catchError((error) => {
-            console.error('Error creating voice message:', error);
-
-            // Mark the optimistic message as failed
-            const currentMessages = this.messagesSubject.value;
-            const updatedMessages = currentMessages.map(msg => {
-              if (msg.id === optimisticMessage.id) {
-                return { ...msg, status: 'error' as const };
+              // Update messages and add to deduplication cache
+              if (message.id) {
+                this.messageDeduplicationCache.add(message.id);
+                this.messageDeduplicationCache.delete(optimisticMessage.id);
               }
-              return msg;
-            });
 
-            this.messagesSubject.next(updatedMessages);
+              this.messagesSubject.next(
+                this.sortMessagesByTimestamp(updatedMessages)
+              );
 
-            return throwError(() => new Error('Failed to send voice message'));
-          })
-        );
+              // Update chat with confirmed message
+              this.updateChatWithLatestMessage(chatId, message);
+            }),
+            catchError((error) => {
+              console.error('Error creating voice message:', error);
+
+              // Mark the optimistic message as failed
+              const currentMessages = this.messagesSubject.value;
+              const updatedMessages = currentMessages.map((msg) => {
+                if (msg.id === optimisticMessage.id) {
+                  return { ...msg, status: 'error' as const };
+                }
+                return msg;
+              });
+
+              this.messagesSubject.next(updatedMessages);
+
+              return throwError(
+                () => new Error('Failed to send voice message')
+              );
+            })
+          );
       }),
       catchError((error) => {
         console.error('Error in voice message upload process:', error);
 
         // Remove the optimistic message on failure
         const currentMessages = this.messagesSubject.value;
-        const updatedMessages = currentMessages.filter(msg => msg.id !== optimisticMessage.id);
+        const updatedMessages = currentMessages.filter(
+          (msg) => msg.id !== optimisticMessage.id
+        );
         this.messagesSubject.next(updatedMessages);
 
         // Return a more user-friendly error
@@ -596,12 +637,16 @@ getChatByTwin(twinId: string): Observable<any> {
     formData.append('sample_rate', '44100'); // Default sample rate
 
     // Upload to the voice recordings endpoint
-    return this.http.post<any>(`${this.apiUrl}/voice-recordings/`, formData).pipe(
-      catchError(error => {
-        console.error('Voice recording upload failed:', error);
-        return throwError(() => new Error('Failed to upload voice recording'));
-      })
-    );
+    return this.http
+      .post<any>(`${this.apiUrl}/voice-recordings/`, formData)
+      .pipe(
+        catchError((error) => {
+          console.error('Voice recording upload failed:', error);
+          return throwError(
+            () => new Error('Failed to upload voice recording')
+          );
+        })
+      );
   }
 
   /**
@@ -623,7 +668,10 @@ getChatByTwin(twinId: string): Observable<any> {
       updatedChats[chatIndex].messages.push(message);
 
       // Update the last message and last active time
-      const displayText = message.message_type === 'voice' ? 'Voice message' : (message.text_content || '');
+      const displayText =
+        message.message_type === 'voice'
+          ? 'Voice message'
+          : message.text_content || '';
 
       updatedChats[chatIndex].last_message = {
         id: message.id,
@@ -640,5 +688,29 @@ getChatByTwin(twinId: string): Observable<any> {
       // Update the BehaviorSubject
       this.chatsSubject.next(this.sortChatsByLastActive(updatedChats));
     }
+  }
+
+  /**
+   * Set the message to reply to
+   */
+  setReplyToMessage(message: Message | null): void {
+    this.replyToMessageSubject.next(message);
+  }
+
+  /**
+   * Get the current message being replied to
+   */
+  getReplyToMessage(): Message | null {
+    return this.replyToMessageSubject.value;
+  }
+
+  reportMessage({reason, details}: {reason: string, details?: string}, messageId: string) {
+    const payload = details ? {reason, details} : {reason};
+    return this.http.post<any>(`${this.apiUrl}/messages/${messageId}/report/`, payload).pipe(
+      catchError((error) => {
+        console.error('Error reporting message:', error);
+        return throwError(() => new Error('Failed to report message'));
+      })
+    );
   }
 }
