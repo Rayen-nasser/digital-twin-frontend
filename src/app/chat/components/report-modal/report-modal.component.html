@@ -1,0 +1,62 @@
+<div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md mx-4">
+    <!-- Modal Header -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white">Report Message</h3>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-4">
+      <form (ngSubmit)="submit()">
+        <!-- Reason Selection -->
+        <div class="mb-4">
+          <label for="report-reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Reason for reporting *
+          </label>
+          <select
+            id="report-reason"
+            name="reason"
+            [(ngModel)]="reason"
+            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            required
+          >
+            <option value="" disabled selected>Select a reason</option>
+            <option *ngFor="let option of reportReasons" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+
+        <!-- Details Text Area -->
+        <div class="mb-4">
+          <label for="report-details" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Additional details
+          </label>
+          <textarea
+            id="report-details"
+            name="details"
+            [(ngModel)]="details"
+            rows="4"
+            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="Please provide any additional information about this report..."
+          ></textarea>
+        </div>
+
+        <!-- Modal Footer - Buttons -->
+        <div class="flex justify-end space-x-2 mt-4">
+          <button
+            type="button"
+            (click)="close()"
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
