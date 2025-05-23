@@ -11,9 +11,10 @@ import {
   OnInit
 } from '@angular/core';
 import { WebsocketService } from '../../services/websocket.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ChatService } from '../../services/chat.service';
+import { Message } from '../../models/message.model';
 
 interface Attachment {
   type: 'image' | 'audio' | 'file';
@@ -30,7 +31,7 @@ interface Attachment {
   styleUrls: ['./chat-input.component.scss']
 })
 export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Output() sendMessage = new EventEmitter<string | Attachment>();
+  @Output() sendMessage = new EventEmitter<{ text?: string, attachment?: Attachment, replyToMessageId?: string }>();
   @Output() typingStatus = new EventEmitter<boolean>();
   @ViewChild('messageInput') messageInput!: ElementRef<HTMLTextAreaElement>;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
@@ -62,6 +63,10 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
   // Attachments
   attachments: Attachment[] = [];
 
+  // Reply functionality
+  replyToMessage: Message | null = null;
+  private replySubscription: Subscription | null = null;
+
   // Emoji categories with type definition
   emojiCategories: {[key: string]: string[]} = {
     'Smileys': ['😊', '😂', '🥹', '😍', '🥰', '😎', '🤩', '😇'],
@@ -72,7 +77,8 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private wsService: WebsocketService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private chatService: ChatService
   ) {
     this.theme$ = this.themeService.theme$;
   }
@@ -80,6 +86,23 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.checkScreenSize();
     window.addEventListener('resize', this.checkScreenSize.bind(this));
+
+    // Subscribe to reply message changes
+    this.replySubscription = this.chatService.replyToMessage$.subscribe(message => {
+      this.replyToMessage = message;
+
+      console.log(
+        'Replying to message:',
+        this.replyToMessage
+      );
+
+      // Focus on the input field when a reply is set
+      if (message && this.messageInput) {
+        setTimeout(() => {
+          this.messageInput.nativeElement.focus();
+        });
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -105,7 +128,23 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
     this.stopAllAudio();
     // Remove resize listener
     window.removeEventListener('resize', this.checkScreenSize.bind(this));
+    // Clean up reply subscription
+    if (this.replySubscription) {
+      this.replySubscription.unsubscribe();
+    }
   }
+
+  // Cancel the current reply
+/**
+ * Cancel the current reply
+ */
+cancelReply(): void {
+  this.replyToMessage = null;
+  // Also notify the service to clear the reply
+  if (this.chatService) {
+    this.chatService.setReplyToMessage(null);
+  }
+}
 
   // Check screen size for responsive UI
   checkScreenSize(): void {
@@ -143,42 +182,58 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
     textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + 'px';
   }
 
-  onSendMessage(): void {
-    const trimmedMessage = this.message.trim();
-    if (trimmedMessage || this.attachments.length > 0) {
-      // Send text message
-      if (trimmedMessage) {
-        this.sendMessage.emit(trimmedMessage);
-      }
-
-      // Send attachments
-      for (const attachment of this.attachments) {
-        this.sendMessage.emit(attachment);
-      }
-
-      // Stop any playing audio before clearing
-      this.stopAllAudio();
-
-      // Clear state
-      this.message = '';
-      this.attachments = [];
-      this.wsService.sendTypingIndicator(false);
-      this.typingStatus.emit(false);
-
-      // Reset textarea height
-      if (this.messageInput) {
-        this.messageInput.nativeElement.style.height = 'auto';
-      }
-
-      setTimeout(() => {
-        if (this.messageInput) {
-          this.messageInput.nativeElement.focus();
-        }
+onSendMessage(): void {
+  const trimmedMessage = this.message.trim();
+  if (trimmedMessage || this.attachments.length > 0) {
+    // Send text message with reply info if present
+    if (trimmedMessage) {
+      this.sendMessage.emit({
+        text: trimmedMessage,
+        replyToMessageId: this.replyToMessage?.id
       });
     }
+
+    // Send attachments
+    for (const attachment of this.attachments) {
+      this.sendMessage.emit({
+        attachment: attachment,
+        replyToMessageId: this.replyToMessage?.id
+      });
+    }
+
+    // Stop any playing audio before clearing
+    this.stopAllAudio();
+
+    // Clear state
+    this.message = '';
+    this.attachments = [];
+    this.wsService.sendTypingIndicator(false);
+    this.typingStatus.emit(false);
+
+    // Clear reply after sending
+    this.cancelReply();
+
+    // Reset textarea height
+    if (this.messageInput) {
+      this.messageInput.nativeElement.style.height = 'auto';
+    }
+
+    setTimeout(() => {
+      if (this.messageInput) {
+        this.messageInput.nativeElement.focus();
+      }
+    });
   }
+}
 
   onKeyDown(event: KeyboardEvent): void {
+    // Cancel reply on Escape key
+    if (event.key === 'Escape' && this.replyToMessage) {
+      event.preventDefault();
+      this.cancelReply();
+      return;
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.onSendMessage();
@@ -370,3 +425,4 @@ export class ChatInputComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 }
+
