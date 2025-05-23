@@ -1,8 +1,11 @@
 export interface Message {
+user: any;
+content: any;
 image_url?: any;
 is_translated: any;
 reactions: any;
-reply_to?: { is_from_user: boolean; text_content?: string } | null;
+reply_details?: any,
+reply_to?: any;
   timestamp: string;
   is_read: boolean;
   is_delivered: boolean;
