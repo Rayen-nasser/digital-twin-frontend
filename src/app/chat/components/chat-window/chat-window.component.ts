@@ -10,6 +10,8 @@ import {
   AfterViewChecked,
   ChangeDetectorRef,
   NgZone,
+  EventEmitter,
+  Output,
 } from '@angular/core';
 import { Message } from '../../models/message.model';
 import { ChatService } from '../../services/chat.service';
@@ -27,6 +29,9 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
   @Input() messages: Message[] | null = [];
   @Input() currentChatId: string | null = null;
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef;
+
+  // Add this Output property at the top of the class with the other properties
+@Output() reportMessageEvent = new EventEmitter<string>();
 
   // Properties
   isDarkMode: boolean = false;
@@ -77,6 +82,7 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
       this.processIncomingMessages(this.messages);
     }
   }
+
 
   ngAfterViewChecked(): void {
     if (this.scrollToBottomOnNextRender) {
@@ -467,4 +473,50 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
       return null;
     }
   }
+
+
+  // In chat-window.component.ts, add this new method:
+
+handleMessageAction(actionData: {action: string, messageId: string, reportData?: any}): void {
+  console.log('Action received:', actionData);
+
+  switch(actionData.action) {
+    case 'delete':
+      console.log('Deleting message:', actionData.messageId);
+      this.deleteMessage(actionData.messageId);
+      break;
+    case 'report':
+      console.log('Reporting message from window chat:', actionData.messageId);
+      this.reportMessage(actionData.messageId);
+      break;
+  }
+}
+
+// Implementation of the action methods:
+deleteMessage(messageId: string): void {
+  if (this.currentChatId) {
+    this.chatService.deleteMessage(this.currentChatId, messageId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Remove message from display messages
+          this.displayMessages = this.displayMessages.filter(msg => msg.id !== messageId);
+          this.cdr.detectChanges();
+        },
+        error: (error) => console.error('Error deleting message:', error)
+      });
+  }
+}
+
+
+reportMessage(messageId: string): void {
+  // Emit an event to the parent (dashboard) component to show the report modal
+  // First we need to add an Output EventEmitter
+  console.log(
+    'Emitting reportMessageEvent with messageId:',
+    messageId
+  );
+
+  this.reportMessageEvent.emit(messageId);
+}
 }
