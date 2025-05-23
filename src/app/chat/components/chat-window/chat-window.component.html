@@ -61,7 +61,8 @@
             [isFirstInSequence]="i === 0 || group.messages[i-1].is_from_user !== message.is_from_user"
             [twinName]="currentChat?.twin_details?.twin_name || ''"
             [twinAvatarUrl]="currentChat?.twin_details?.avatar_url ? encodeURI(currentChat?.twin_details?.avatar_url) : null"
-            [isDarkMode]="isDarkMode">
+            [isDarkMode]="isDarkMode"
+            (messageAction)="handleMessageAction($event)">
           </app-message>
         </ng-container>
       </ng-container>
