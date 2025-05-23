@@ -260,6 +260,7 @@
       <app-chat-window
         [messages]="messages$ | async"
         [currentChatId]="currentChatId"
+        (reportMessageEvent)="openReportModal($event)"
         class="flex-1 flex flex-col overflow-hidden"
       >
       </app-chat-window>
@@ -341,4 +342,13 @@
     (close)="closeSettingsMenu()"
   >
   </app-settings-menu>
+
+  <!-- Report Modal Component -->
+<app-report-modal
+  *ngIf="showReportModal"
+  [messageId]="reportingMessageId"
+  (closeModal)="closeReportModal()"
+  (submitReport)="onSubmitReport($event)"
+>
+</app-report-modal>
 </div>
