@@ -135,28 +135,39 @@ export class WebsocketService {
     }
   }
 
-  /**
-   * Send a text message through the WebSocket
-   */
-  public sendMessage(content: string): void {
-    if (!content || content.trim() === '') {
-      this.log('Attempted to send empty message');
-      return;
-    }
-
-    // Try all possible message formats that the server might accept
-    // Format 1
-    this.tryMessageFormat({
-      type: 'chat_message',
-      content: content.trim()
-    });
-
-    // Make sure we're connected
-    this.ensureConnection();
-
-    // Stop typing indicator when sending a message
-    this.sendTypingIndicator(false);
+/**
+ * Send a text message through the WebSocket
+ * Updated to support reply functionality
+ */
+public sendMessage(content: string, replyToMessageId?: string): void {
+  if (!content || content.trim() === '') {
+    this.log('Attempted to send empty message');
+    return;
   }
+
+  // Create message payload with optional reply_to field
+  const messagePayload: any = {
+    type: 'text',
+    content: content.trim()
+  };
+
+  // Add reply_to if provided
+  if (replyToMessageId) {
+    messagePayload.reply_to = replyToMessageId;
+  }
+
+  // Try all possible message formats that the server might accept
+  this.tryMessageFormat({
+    type: 'chat_message',
+    ...messagePayload
+  });
+
+  // Make sure we're connected
+  this.ensureConnection();
+
+  // Stop typing indicator when sending a message
+  this.sendTypingIndicator(false);
+}
 
   /**
    * Try different message formats to find one that works
