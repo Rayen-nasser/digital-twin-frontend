@@ -4,38 +4,56 @@ import {
   Output,
   EventEmitter,
   ChangeDetectionStrategy,
-  OnInit
+  OnInit,
+  ElementRef,
+  HostListener,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { Message } from '../../models/message.model';
-import { ThemeService } from '../../../core/services/theme.service';
+import { ChatService } from '../../services/chat.service';
 
 @Component({
   selector: 'app-message',
   templateUrl: './message.component.html',
   styleUrls: ['./message.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessageComponent implements OnInit {
+  playVoiceMessage() {
+    throw new Error('Method not implemented.');
+  }
   @Input() message!: Message;
   @Input() isFirstInSequence: boolean = false;
   @Input() twinName: string = '';
   @Input() twinAvatarUrl: string | null = null;
   @Input() isDarkMode: boolean = false;
+  @Output() messageAction = new EventEmitter<{
+    action: string;
+    messageId: string;
+  }>();
 
-  @Output() messageAction = new EventEmitter<{action: string, messageId: string, emoji?: string}>();
-
-  isActionsMenuOpen: boolean = false;
-  reactionOptions: string[] = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-  showReactions: boolean = false;
-
-  constructor() {}
+  constructor(
+    private elementRef: ElementRef,
+    private cdr: ChangeDetectorRef,
+    private chatService: ChatService
+  ) {}
 
   ngOnInit(): void {}
 
-  formatTime(dateString: string): string {
+  // Close menu when clicking outside
+  @HostListener('document:click', ['$event'])
+  clickOutside(event: Event) {
+    if (
+      !this.elementRef.nativeElement.contains(event.target)
+    ) {
+      this.cdr.detectChanges();
+    }
+  }
+
+  formatTime(dateString: string | undefined): string {
+    if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
-
     return date.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
@@ -58,79 +76,44 @@ export class MessageComponent implements OnInit {
     return text_content;
   }
 
-  toggleActionsMenu(): void {
-    this.isActionsMenuOpen = !this.isActionsMenuOpen;
-    // Close reactions panel when opening actions menu
-    if (this.isActionsMenuOpen) {
-      this.showReactions = false;
+  replyToMessage(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
     }
-  }
 
-  toggleReactions(): void {
-    this.showReactions = !this.showReactions;
-    // Close actions menu when opening reactions
-    if (this.showReactions) {
-      this.isActionsMenuOpen = false;
-    }
-  }
-
-  addReaction(emoji: string): void {
-    this.messageAction.emit({
-      action: 'react',
-      messageId: this.message.id || '',
-      emoji: emoji
-    });
-    this.showReactions = false;
-  }
-
-  replyToMessage(): void {
+    console.log('Replying to message:', this.message.id);
     this.messageAction.emit({
       action: 'reply',
-      messageId: this.message.id || ''
+      messageId: this.message.id || '',
     });
-    this.isActionsMenuOpen = false;
+
+    this.chatService.setReplyToMessage(this.message);
+
+    this.cdr.detectChanges(); // Force change detection
   }
 
-  copyMessage(): void {
-    if (this.message.text_content) {
-      navigator.clipboard.writeText(this.message.text_content)
-        .then(() => {
-          // Show a toast or notification that message was copied
-          this.messageAction.emit({
-            action: 'copy-success',
-            messageId: this.message.id || ''
-          });
-        })
-        .catch(err => {
-          console.error('Could not copy message: ', err);
-        });
+  deleteMessage(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
     }
-    this.isActionsMenuOpen = false;
-  }
 
-  deleteMessage(): void {
     if (confirm('Are you sure you want to delete this message?')) {
+      console.log('Deleting message:', this.message.id);
       this.messageAction.emit({
         action: 'delete',
-        messageId: this.message.id || ''
+        messageId: this.message.id || '',
       });
     }
-    this.isActionsMenuOpen = false;
+
+    this.cdr.detectChanges(); // Force change detection
   }
 
-  forwardMessage(): void {
+  reportMessage(event?: MouseEvent): void {
     this.messageAction.emit({
-      action: 'forward',
-      messageId: this.message.id || ''
+      action: 'report',
+      messageId: this.message.id || '',
     });
-    this.isActionsMenuOpen = false;
-  }
 
-  translateMessage(): void {
-    this.messageAction.emit({
-      action: 'translate',
-      messageId: this.message.id || ''
-    });
-    this.isActionsMenuOpen = false;
+    this.cdr.detectChanges(); // Force change detection
   }
 }

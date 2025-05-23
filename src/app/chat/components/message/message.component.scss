@@ -12,17 +12,32 @@
 }
 
 .message-actions {
-  // Position these buttons properly for different message types
-  transform: translateY(-50%);
+  position: absolute;
+  top: -0.75rem; // Position above the message bubble
   padding: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+
+  // Add hoverable space around buttons
+  > div {
+    padding: 0.25rem;
+    border-radius: 999px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  }
 
   :host-context(.dark-mode) & {
-    background-color: rgba(55, 65, 81, 0.9);
+    > div {
+      background-color: rgba(55, 65, 81, 0.95);
+    }
   }
+}
+
+// Remove the group class-based visibility and use direct hover on container
+.message-container:hover .message-actions {
+  opacity: 1;
+  visibility: visible;
 }
 
 .context-menu {
@@ -72,6 +87,93 @@
 // Image message styling
 .image-message {
   img {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+}
+
+.message-container {
+  position: relative;
+  margin-bottom: 8px;
+
+  &:hover {
+    .message-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.message-bubble {
+  position: relative;
+  word-wrap: break-word;
+
+  // Improve link styling
+  a {
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
+.message-actions {
+  position: absolute;
+  top: -24px;
+  transform: translateY(10px);
+  opacity: 0;
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.message-reply-info {
+  position: relative;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -8px;
+    right: -8px;
+    height: 1px;
+    background-color: rgba(209, 213, 219, 0.5);
+  }
+}
+
+/* Animation for status indicators */
+svg {
+  transition: all 0.2s ease;
+}
+
+/* Highlight reported messages */
+.message-reported {
+  position: relative;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    background-color: #EF4444;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+}
+
+/* Improve image display */
+.image-message {
+  img {
+    border: 1px solid rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
 
     &:hover {
