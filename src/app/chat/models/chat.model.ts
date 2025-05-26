@@ -6,6 +6,7 @@ export interface Chat {
     twin_name: string;
     avatar_url: any;
   };
+  is_archived: boolean;
   created_at: string;
   last_active: string;
   user_has_access: boolean;
