@@ -353,9 +353,9 @@ public sendMessage(content: string, replyToMessageId?: string): void {
     // Use environment-specific hostname
     const hostname = environment.production
       ? window.location.host  // Use current host in production
-      : 'localhost:8000';     // Use development server in dev mode
+      : 'localhost:8001';     // Use development server in dev mode
 
-    // Construct WebSocket URL
+    // Construct WebSocket URLgit 
     return `${wsProtocol}//${hostname}/api/v1/messaging/ws/chat/${chatId}/?token=${token}`;
   }
 
