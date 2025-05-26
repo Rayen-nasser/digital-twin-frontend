@@ -713,4 +713,27 @@ export class ChatService {
       })
     );
   }
+
+
+  clearChat(chatId: string) {
+    return this.http.delete(`${this.apiUrl}/chats/${chatId}/clear_chat/`)
+  }
+
+  muteChat(chatId: string, mute: boolean) {
+    return this.http.patch(`${this.apiUrl}/chats/${chatId}/mute_chat/`, {
+      muted: mute,
+    })
+  }
+
+  blockContact(chatId: string) {
+    return this.http.post(`${this.apiUrl}/chats/${chatId}/block_contact/`, {})
+  }
+
+  // Report a contact/chat
+  reportContact(chatId: string, reportData: any) {
+    return this.http.post(`${this.apiUrl}/chats/${chatId}/report_contact/`, {
+      reason: reportData.reason,
+      details: reportData.details,
+    })
+  }
 }
