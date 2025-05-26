@@ -1,10 +1,104 @@
-<!-- chat-list.component.html with dark mode and improved UI -->
+<!-- chat-list.component.html with search and tab filtering -->
 <div class="flex flex-col h-full overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
 
+  <!-- Search -->
+  <div class="p-3 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+    <div class="relative">
+      <input
+        type="text"
+        placeholder="Search twin name..."
+        [value]="searchQuery"
+        (input)="onSearchInput($event)"
+        class="w-full py-2.5 pl-10 pr-10 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm transition-all duration-200"
+      />
+      <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+        <svg
+          class="w-5 h-5 text-gray-500 dark:text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
+      </div>
+      <!-- Clear search button -->
+      <button
+        *ngIf="searchQuery"
+        (click)="clearSearch()"
+        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat list with category tabs -->
+  <div class="border-b border-gray-200 dark:border-gray-700">
+    <div class="flex px-3 -mb-px">
+      <button
+        (click)="switchTab('recent')"
+        class="flex-1 py-3 px-1 text-sm font-medium transition-colors duration-200 relative"
+        [ngClass]="{
+          'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 dark:border-blue-400': activeTab === 'recent',
+          'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'recent'
+        }"
+      >
+        Recent
+        <span *ngIf="getRecentCount() > 0 && activeTab === 'recent'"
+              class="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-full">
+          {{ getRecentCount() }}
+        </span>
+      </button>
+      <button
+        (click)="switchTab('unread')"
+        class="flex-1 py-3 px-1 text-sm font-medium transition-colors duration-200 relative"
+        [ngClass]="{
+          'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 dark:border-blue-400': activeTab === 'unread',
+          'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'unread'
+        }"
+      >
+        Unread
+        <span *ngIf="getUnreadCount() > 0"
+              class="ml-1 px-1.5 py-0.5 text-xs bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 rounded-full">
+          {{ getUnreadCount() }}
+        </span>
+      </button>
+      <button
+        (click)="switchTab('archived')"
+        class="flex-1 py-3 px-1 text-sm font-medium transition-colors duration-200 relative"
+        [ngClass]="{
+          'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 dark:border-blue-400': activeTab === 'archived',
+          'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300': activeTab !== 'archived'
+        }"
+      >
+        Archived
+        <span *ngIf="getArchivedCount() > 0 && activeTab === 'archived'"
+              class="ml-1 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
+          {{ getArchivedCount() }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search results info -->
+  <div *ngIf="searchQuery" class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+    <p class="text-xs text-gray-600 dark:text-gray-400">
+      {{ filteredChats.length }} result{{ filteredChats.length !== 1 ? 's' : '' }} for "{{ searchQuery }}"
+    </p>
+  </div>
+
   <!-- Chat list -->
-  <div *ngIf="chats && chats.length > 0; else noChats" class="flex-1 overflow-y-auto">
+  <div *ngIf="filteredChats && filteredChats.length > 0; else noChats" class="flex-1 overflow-y-auto">
     <div
-      *ngFor="let chat of chats"
+      *ngFor="let chat of filteredChats"
       (click)="onSelectChat(chat.id)"
       class="flex items-center px-4 py-3 cursor-pointer transition-colors duration-200"
       [ngClass]="{
@@ -35,14 +129,23 @@
              class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm">
           {{ chat.unread_count > 9 ? '9+' : chat.unread_count }}
         </div>
+
+        <!-- Archived indicator -->
+        <div *ngIf="chat.is_archived"
+             class="absolute -top-1 -left-1 w-4 h-4 bg-gray-500 rounded-full flex items-center justify-center">
+          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path>
+            <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
       </div>
 
       <!-- Chat info -->
       <div class="ml-3 flex-1 min-w-0">
         <div class="flex justify-between items-center">
           <h3 class="text-sm font-medium truncate dark:text-gray-200"
-              [ngClass]="{'font-semibold': chat.unread_count > 0}">
-            {{ chat.twin_details?.twin_name }}
+              [ngClass]="{'font-semibold': chat.unread_count > 0}"
+              [innerHTML]="highlightSearchTerm(chat.twin_details?.twin_name || '')">
           </h3>
           <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2 flex items-center">
             {{ formatTime(chat.last_active) }}
@@ -60,9 +163,8 @@
                'font-medium': chat.unread_count > 0,
                'text-gray-500 dark:text-gray-400': chat.unread_count === 0,
                'text-gray-800 dark:text-gray-200': chat.unread_count > 0
-             }">
-            <span *ngIf="chat.last_message?.is_from_user" class="text-xs text-gray-500 dark:text-gray-500">You: </span>
-            {{ truncateMessage(chat.last_message?.text_content || '') }}
+             }"
+             [innerHTML]="'<span class=\'text-xs text-gray-500 dark:text-gray-500\'>' + (chat.last_message?.is_from_user ? 'You: ' : '') + '</span>' + highlightSearchTerm(truncateMessage(chat.last_message?.text_content || ''))">
           </p>
 
           <!-- Message status icons -->
@@ -85,16 +187,42 @@
   <ng-template #noChats>
     <div class="flex flex-col items-center justify-center h-full p-6 text-center">
       <div class="w-16 h-16 mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-        <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg *ngIf="!searchQuery" class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
           </path>
         </svg>
+        <svg *ngIf="searchQuery" class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
       </div>
-      <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">No conversations yet</h3>
-      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">Start a new chat to connect with others</p>
-      <button class="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm">
+
+      <h3 *ngIf="!searchQuery" class="text-lg font-medium text-gray-800 dark:text-gray-200">
+        {{ activeTab === 'recent' ? 'No conversations yet' :
+           activeTab === 'unread' ? 'No unread messages' :
+           'No archived chats' }}
+      </h3>
+      <h3 *ngIf="searchQuery" class="text-lg font-medium text-gray-800 dark:text-gray-200">
+        No results found
+      </h3>
+
+      <p *ngIf="!searchQuery" class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+        {{ activeTab === 'recent' ? 'Start a new chat to connect with others' :
+           activeTab === 'unread' ? 'All your messages have been read' :
+           'No chats have been archived yet' }}
+      </p>
+      <p *ngIf="searchQuery" class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+        Try searching with different keywords or check your spelling
+      </p>
+
+      <button *ngIf="!searchQuery && activeTab === 'recent'"
+              class="mt-6 px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm">
         Start a new chat
+      </button>
+      <button *ngIf="searchQuery"
+              (click)="clearSearch()"
+              class="mt-6 px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg transition-colors shadow-sm">
+        Clear search
       </button>
     </div>
   </ng-template>
