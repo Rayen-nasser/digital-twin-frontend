@@ -1,0 +1,53 @@
+/* Add this to your existing SCSS file */
+
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 1000; /* Ensure high z-index */
+  position: absolute; /* Ensure proper positioning */
+  right: 0;
+  top: 100%;
+  margin-top: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure the dropdown is above other elements */
+.relative {
+  position: relative;
+}
+
+/* Add a subtle hover effect to the options button */
+button:focus {
+  outline: none;
+}
+
+/* Style for the dropdown menu items */
+.dropdown-menu button {
+  transition: background-color 0.2s ease;
+}
+
+/* Dark mode adjustments */
+:host-context(.dark-theme) {
+  .dropdown-menu {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+
+  .dropdown-menu button {
+    color: #e5e7eb;
+  }
+
+  .dropdown-menu button:hover {
+    background-color: #374151;
+  }
+}

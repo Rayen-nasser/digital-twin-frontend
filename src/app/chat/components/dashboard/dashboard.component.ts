@@ -24,6 +24,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   messages$: Observable<Message[]>;
   currentChatId$: Observable<string | null>;
   user$: Observable<User | null>;
+  reportType!: 'message' | 'contact';
 
   isWebSocketConnected = false;
   mobileView = false;
@@ -38,12 +39,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // HeyGen streaming properties
   showStreamingPanel = false;
   isStreamingActive = false;
-  streamingConfig = {
-    avatar_id: 'anna_public_3_20240108',
-    voice_id: '1bd001e7e50f421d891986aad5158bc8',
-    language: 'en',
-    quality: 'high'
-  };
+  selectedChatIdForContactReport = ""
 
   private destroy$ = new Subject<void>();
 
@@ -95,15 +91,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.isStreamingActive = this.heygenService.isSessionActive();
         console.log('HeyGen streaming status:', status);
       });
-
-    // Auto-start streaming when chat is selected (optional)
-    this.currentChatId$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(chatId => {
-        if (chatId && this.showStreamingPanel) {
-          this.prepareStreamingForChat(chatId);
-        }
-      });
   }
 
   // Enhanced chat selection with streaming preparation
@@ -115,42 +102,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.sidebarOpen = false;
     }
 
-    // Prepare streaming for the selected chat if streaming panel is open
-    if (this.showStreamingPanel) {
-      this.prepareStreamingForChat(chatId);
-    }
   }
 
-  // Prepare streaming configuration for a specific chat
-  prepareStreamingForChat(chatId: string): void {
-    console.log('Preparing streaming for chat:', chatId);
 
-    // You can customize streaming config based on chat context
-    // For example, different avatars for different chat types
-    this.customizeStreamingConfig(chatId);
-  }
-
-  // Customize streaming configuration based on chat context
-  customizeStreamingConfig(chatId: string): void {
-    // Get chat details to customize avatar/voice
-    this.chatService.getChatByTwin(chatId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(chat => {
-        if (chat) {
-          // Example: Use different avatars based on chat topic or participants
-          // if (chat.name?.toLowerCase().includes('business')) {
-          //   this.streamingConfig.avatar_id = 'eric_public_pro2_20230608';
-          // } else if (chat.name?.toLowerCase().includes('casual')) {
-            this.streamingConfig.avatar_id = 'josh_lite3_20230714';
-          // }
-
-          // Update the streaming component configuration
-          if (this.heygenStreamingComponent) {
-            this.heygenStreamingComponent.updateConfig(this.streamingConfig);
-          }
-        }
-      });
-  }
 
   // Enhanced message sending with streaming integration
   onSendMessage(payload: any): void {
@@ -167,11 +121,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             ).subscribe({
               next: (response) => {
                 console.log('Message sent:', response);
-
-                // If streaming is active, also send to HeyGen
-                if (this.isStreamingActive && payload.text) {
-                  this.sendToHeyGenStreaming(payload.text, currentChatId);
-                }
               },
               error: (error) => console.error('Error sending message:', error)
             });
@@ -197,74 +146,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Send message to HeyGen streaming
-  sendToHeyGenStreaming(message: string, chatId: string): void {
-    if (this.heygenStreamingComponent) {
-      // Use the streaming component's method
-      this.heygenStreamingComponent.sendMessageToStreaming(message);
-    } else {
-      // Direct service call
-      this.heygenService.quickChatStream(message, chatId, this.streamingConfig)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            console.log('Message sent to HeyGen streaming:', response);
-            this.toasterService.success('Message sent to AI avatar');
-          },
-          error: (error) => {
-            console.error('Error sending to HeyGen:', error);
-            this.toasterService.error('Failed to send message to AI avatar');
-          }
-        });
-    }
-  }
-
-  // Toggle streaming panel
-  toggleStreamingPanel(): void {
-    this.showStreamingPanel = !this.showStreamingPanel;
-
-    if (this.showStreamingPanel) {
-      // Prepare streaming for current chat if one is selected
-      this.currentChatId$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(chatId => {
-          if (chatId) {
-            this.prepareStreamingForChat(chatId);
-          }
-        });
-    } else {
-      // Optionally stop streaming when panel is closed
-      this.stopStreamingSession();
-    }
-  }
-
-  // Start streaming session
-  startStreamingSession(): void {
-    this.currentChatId$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(chatId => {
-        if (chatId) {
-          if (this.heygenStreamingComponent) {
-            this.heygenStreamingComponent.startStreaming();
-          } else {
-            this.heygenService.startStreaming(this.streamingConfig)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                next: (response) => {
-                  console.log('Streaming started:', response);
-                  this.toasterService.success('AI Avatar streaming started');
-                },
-                error: (error) => {
-                  console.error('Error starting streaming:', error);
-                  this.toasterService.error('Failed to start AI Avatar streaming');
-                }
-              });
-          }
-        } else {
-          this.toasterService.warning('Please select a chat first');
-        }
-      });
-  }
 
   // Stop streaming session
   stopStreamingSession(): void {
@@ -294,23 +175,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (chatId) {
           if (this.heygenStreamingComponent) {
             this.heygenStreamingComponent.generateAndStream();
-          } else {
-            this.heygenService.generateAndStream(chatId, this.streamingConfig, 'summary')
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                next: (response) => {
-                  console.log('Generated and streaming:', response);
-                  this.toasterService.success('AI Avatar is presenting chat summary');
-                },
-                error: (error) => {
-                  console.error('Error generating and streaming:', error);
-                  this.toasterService.error('Failed to generate AI Avatar presentation');
-                }
-              });
           }
-        } else {
-          this.toasterService.warning('Please select a chat first');
-        }
+          }
       });
   }
 
@@ -398,24 +264,78 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // Report modal methods
-  openReportModal(messageId: string): void {
-    console.log('Opening report modal for message ID:', messageId);
-    this.reportingMessageId = messageId;
-    this.showReportModal = true;
+ openReportModal(messageIdOrSpecial: string): void {
+    // Check if this is a contact report (format: "contact:chatId")
+    if (messageIdOrSpecial.startsWith("contact:")) {
+      const chatId = messageIdOrSpecial.split(":")[1]
+      this.openReportContactModal(chatId)
+    } else {
+      // Regular message report
+      console.log("Opening report modal for message ID:", messageIdOrSpecial)
+      this.reportingMessageId = messageIdOrSpecial
+      this.reportType = "message"
+      this.showReportModal = true
+    }
   }
 
-  closeReportModal(): void {
-    this.showReportModal = false;
+   closeReportModal(): void {
+    this.showReportModal = false
+    this.reportingMessageId = ""
+    this.reportType = "message"
+    this.selectedChatIdForContactReport = ""
   }
 
+  openReportContactModal(chatId: string): void {
+    console.log("Opening report modal for contact with chat ID:", chatId)
+    this.selectedChatIdForContactReport = chatId
+    this.reportType = "contact"
+    this.showReportModal = true
+  }
+
+  handleMessageAction(action: string): void {
+    if (action === "report") {
+      // Handle report action
+      if (this.reportType === "message") {
+        console.log("Reporting message with ID:", this.reportingMessageId)
+        // Implement your reporting logic here for messages
+      } else if (this.reportType === "contact") {
+        console.log("Reporting contact with chat ID:", this.selectedChatIdForContactReport)
+        // Implement your reporting logic here for contacts
+      }
+      this.closeReportModal()
+    } else if (action === "cancel") {
+      // Handle cancel action
+      this.closeReportModal()
+    }
+  }
+
+   // Update the onSubmitReport method to use the new reportContactWithReason method
   onSubmitReport(reportData: any): void {
-    this.chatService.reportMessage(reportData, this.reportingMessageId).subscribe(
-      (response) => {
-        this.toasterService.success('Message reported successfully');
-      },
-      (error) => console.error('Error reporting message:', error)
-    );
-    this.closeReportModal();
+    if (this.reportType === "message") {
+      // Report a message
+      this.chatService.reportMessage(reportData, this.reportingMessageId).subscribe({
+        next: (response) => {
+          this.toasterService.success("Message reported successfully")
+          this.closeReportModal()
+        },
+        error: (error) => {
+          console.error("Error reporting message:", error)
+          this.toasterService.error("Failed to report message")
+        },
+      })
+    } else if (this.reportType === "contact") {
+      // Report a contact/chat
+      this.chatService.reportContact(this.selectedChatIdForContactReport, reportData).subscribe({
+        next: (response) => {
+          this.toasterService.success("Contact reported successfully")
+          this.closeReportModal()
+        },
+        error: (error) => {
+          console.error("Error reporting contact:", error)
+          this.toasterService.error("Failed to report contact")
+        },
+      })
+    }
   }
 
   ngOnDestroy(): void {

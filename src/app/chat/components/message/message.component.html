@@ -1,6 +1,7 @@
 <div
-  class="flex message-container relative"
+  class="flex message-container relative transition-all duration-300"
   [class.justify-end]="message.is_from_user"
+  [id]="'message-' + message.id"
 >
   <!-- Twin avatar (shown only for first message in a sequence) -->
   <div
@@ -246,7 +247,6 @@
 
         <!-- Delete button (only for user's messages) -->
         <button
-          *ngIf="message.is_from_user"
           class="p-1.5 text-red-500 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
           (click)="deleteMessage()"
           title="Delete"
