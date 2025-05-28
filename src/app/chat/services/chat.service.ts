@@ -30,6 +30,12 @@ export class ChatService {
 
   private chatsSubject = new BehaviorSubject<Chat[]>([]);
   public chats$ = this.chatsSubject.asObservable();
+  private chatArchivedSubject = new BehaviorSubject<string | null>(null);
+
+  private messagesReadSubject = new BehaviorSubject<string | null>(null);
+  public messagesRead$ = this.messagesReadSubject
+    .asObservable()
+    .pipe(filter((chatId) => chatId !== null));
 
   private messagesSubject = new BehaviorSubject<Message[]>([]);
   public messages$ = this.messagesSubject.asObservable();
@@ -209,16 +215,29 @@ export class ChatService {
   }
 
   // Mark messages as read
-  markMessagesAsRead(chatId: string): Observable<any> {
-    return this.http
-      .post(`${this.apiUrl}/chats/${chatId}/mark_messages_read/`, {})
-      .pipe(
-        catchError((error) => {
-          console.error('Error marking messages as read:', error);
-          return of(null);
-        })
-      );
-  }
+markMessagesAsRead(chatId: string): Observable<any> {
+  return this.http
+    .post(`${this.apiUrl}/chats/${chatId}/mark_messages_read/`, {})
+    .pipe(
+      tap(() => {
+        // Update the chat's unread count in the local state
+        const currentChats = this.chatsSubject.value;
+        const updatedChats = currentChats.map(chat =>
+          chat.id === chatId
+            ? { ...chat, unread_count: 0 }
+            : chat
+        );
+        this.chatsSubject.next(updatedChats);
+
+        // Emit the messages read event
+        this.messagesReadSubject.next(chatId);
+      }),
+      catchError((error) => {
+        console.error('Error marking messages as read:', error);
+        return of(null);
+      })
+    );
+}
 
   // Send a message with optional reply functionality
   sendMessage(
@@ -648,48 +667,6 @@ export class ChatService {
         })
       );
   }
-
-  /**
-   * Helper method to add a message to local state
-   * This keeps the UI in sync with the backend
-   */
-  private addMessageToLocalState(chatId: string, message: Message): void {
-    // Find the chat in the current chats array
-    const chats = this.chatsSubject.value;
-    const chatIndex = chats.findIndex((c) => c.id === chatId);
-
-    if (chatIndex !== -1) {
-      // Add the message to the chat
-      const updatedChats = [...chats];
-      if (!updatedChats[chatIndex].messages) {
-        updatedChats[chatIndex].messages = [];
-      }
-
-      updatedChats[chatIndex].messages.push(message);
-
-      // Update the last message and last active time
-      const displayText =
-        message.message_type === 'voice'
-          ? 'Voice message'
-          : message.text_content || '';
-
-      updatedChats[chatIndex].last_message = {
-        id: message.id,
-        text_content: displayText,
-        message_type: message.message_type,
-        created_at: new Date().toISOString(),
-        is_from_user: true,
-        is_delivered: false,
-        is_read: false,
-      };
-
-      updatedChats[chatIndex].last_active = new Date().toISOString();
-
-      // Update the BehaviorSubject
-      this.chatsSubject.next(this.sortChatsByLastActive(updatedChats));
-    }
-  }
-
   /**
    * Set the message to reply to
    */
@@ -704,29 +681,33 @@ export class ChatService {
     return this.replyToMessageSubject.value;
   }
 
-  reportMessage({reason, details}: {reason: string, details?: string}, messageId: string) {
-    const payload = details ? {reason, details} : {reason};
-    return this.http.post<any>(`${this.apiUrl}/messages/${messageId}/report/`, payload).pipe(
-      catchError((error) => {
-        console.error('Error reporting message:', error);
-        return throwError(() => new Error('Failed to report message'));
-      })
-    );
+  reportMessage(
+    { reason, details }: { reason: string; details?: string },
+    messageId: string
+  ) {
+    const payload = details ? { reason, details } : { reason };
+    return this.http
+      .post<any>(`${this.apiUrl}/messages/${messageId}/report/`, payload)
+      .pipe(
+        catchError((error) => {
+          console.error('Error reporting message:', error);
+          return throwError(() => new Error('Failed to report message'));
+        })
+      );
   }
 
-
   clearChat(chatId: string) {
-    return this.http.delete(`${this.apiUrl}/chats/${chatId}/clear_chat/`)
+    return this.http.delete(`${this.apiUrl}/chats/${chatId}/clear_chat/`);
   }
 
   muteChat(chatId: string, mute: boolean) {
     return this.http.patch(`${this.apiUrl}/chats/${chatId}/mute_chat/`, {
       muted: mute,
-    })
+    });
   }
 
   blockContact(chatId: string) {
-    return this.http.post(`${this.apiUrl}/chats/${chatId}/block_contact/`, {})
+    return this.http.post(`${this.apiUrl}/chats/${chatId}/block_contact/`, {});
   }
 
   // Report a contact/chat
@@ -734,6 +715,35 @@ export class ChatService {
     return this.http.post(`${this.apiUrl}/chats/${chatId}/report_contact/`, {
       reason: reportData.reason,
       details: reportData.details,
-    })
+    });
   }
+
+  archiveChat(chatId: string) {
+    return this.http
+      .patch(`${this.apiUrl}/chats/${chatId}/toggle_archive/`, {})
+      .pipe(
+        tap((response: any) => {
+          // Update the chat in the current list instead of removing it
+          const currentChats = this.chatsSubject.value;
+          const updatedChats = currentChats.map((chat) =>
+            chat.id === chatId
+              ? { ...chat, is_archived: !chat.is_archived }
+              : chat
+          );
+
+          this.chatsSubject.next(updatedChats);
+
+          // Emit the archived chat ID
+          this.chatArchivedSubject.next(chatId);
+        }),
+        catchError((error) => {
+          console.error('Error archiving chat:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  public chatArchived$ = this.chatArchivedSubject
+    .asObservable()
+    .pipe(filter((chatId) => chatId !== null));
 }
