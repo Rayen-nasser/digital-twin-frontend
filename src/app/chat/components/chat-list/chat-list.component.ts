@@ -1,28 +1,65 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef, SimpleChanges } from '@angular/core';
 import { Chat } from '../../models/chat.model';
+import { ChatService } from '../../services/chat.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chat-list',
   templateUrl: './chat-list.component.html',
   styleUrls: ['./chat-list.component.scss']
 })
-export class ChatListComponent implements OnInit {
+export class ChatListComponent implements OnInit, OnDestroy {
   @Input() chats: Chat[] | null = [];
   @Input() currentChatId: string | null = null;
   @Output() selectChat = new EventEmitter<string>();
 
-  // Search and filter properties
   searchQuery: string = '';
   activeTab: 'recent' | 'unread' | 'archived' = 'recent';
   filteredChats: Chat[] = [];
 
-  ngOnInit(): void {
-    console.log(this.chats);
-    this.updateFilteredChats();
-  }
+  private archiveSubscription?: Subscription;
+  private messagesReadSubscription?: Subscription;
 
-  ngOnChanges(): void {
-    this.updateFilteredChats();
+
+  constructor(private chatService: ChatService, private cdr: ChangeDetectorRef) {}
+
+ngOnInit(): void {
+  console.log(this.chats);
+  this.updateFilteredChats();
+
+  // Subscribe to archive notifications
+  this.archiveSubscription = this.chatService.chatArchived$.subscribe(
+    (archivedChatId) => {
+      console.log('Chat archived:', archivedChatId);
+      this.updateFilteredChats();
+      this.cdr.detectChanges(); // Force change detection
+    }
+  );
+
+  // Subscribe to messages read notifications
+  this.messagesReadSubscription = this.chatService.messagesRead$.subscribe(
+    (chatId) => {
+      console.log('Messages marked as read for chat:', chatId);
+      this.updateFilteredChats();
+      this.cdr.detectChanges(); // Force change detection
+    }
+  );
+}
+
+  // 6. Add ngOnDestroy to cleanup subscriptions
+  ngOnDestroy(): void {
+    if (this.archiveSubscription) {
+      this.archiveSubscription.unsubscribe();
+    }
+    if (this.messagesReadSubscription) {
+      this.messagesReadSubscription.unsubscribe();
+    }
+  }
+ ngOnChanges(changes: SimpleChanges): void {
+    if (changes['chats'] && this.chats) {
+      this.updateFilteredChats();
+      this.cdr.detectChanges();
+    }
   }
 
   onSelectChat(chatId: string): void {
@@ -33,7 +70,6 @@ export class ChatListComponent implements OnInit {
     return window.encodeURI(url);
   }
 
-  // Search functionality
   onSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchQuery = target.value.toLowerCase().trim();
@@ -45,13 +81,11 @@ export class ChatListComponent implements OnInit {
     this.updateFilteredChats();
   }
 
-  // Tab switching functionality
   switchTab(tab: 'recent' | 'unread' | 'archived'): void {
     this.activeTab = tab;
     this.updateFilteredChats();
   }
 
-  // Update filtered chats based on search and active tab
   updateFilteredChats(): void {
     if (!this.chats) {
       this.filteredChats = [];
@@ -60,7 +94,6 @@ export class ChatListComponent implements OnInit {
 
     let filtered = [...this.chats];
 
-    // Apply search filter
     if (this.searchQuery) {
       filtered = filtered.filter(chat =>
         chat.twin_details?.twin_name?.toLowerCase().includes(this.searchQuery) ||
@@ -68,20 +101,18 @@ export class ChatListComponent implements OnInit {
       );
     }
 
-    // Apply tab filter
     switch (this.activeTab) {
       case 'recent':
-        // Show all chats, sorted by last activity (most recent first)
-        filtered = filtered.sort((a, b) => {
-          const dateA = new Date(a.last_active || 0).getTime();
-          const dateB = new Date(b.last_active || 0).getTime();
-          return dateB - dateA;
-        });
+        filtered = filtered.filter(chat => chat.is_archived !== true)
+          .sort((a, b) => {
+            const dateA = new Date(a.last_active || 0).getTime();
+            const dateB = new Date(b.last_active || 0).getTime();
+            return dateB - dateA;
+          });
         break;
 
       case 'unread':
-        // Show only chats with unread messages
-        filtered = filtered.filter(chat => chat.unread_count > 0)
+        filtered = filtered.filter(chat => chat.unread_count > 0 && chat.is_archived !== true)
           .sort((a, b) => {
             const dateA = new Date(a.last_active || 0).getTime();
             const dateB = new Date(b.last_active || 0).getTime();
@@ -90,7 +121,6 @@ export class ChatListComponent implements OnInit {
         break;
 
       case 'archived':
-        // Show only archived chats
         filtered = filtered.filter(chat => chat.is_archived === true)
           .sort((a, b) => {
             const dateA = new Date(a.last_active || 0).getTime();
@@ -103,20 +133,18 @@ export class ChatListComponent implements OnInit {
     this.filteredChats = filtered;
   }
 
-  // Get count for each tab
   getRecentCount(): number {
-    return this.chats?.length || 0;
+    return this.chats?.filter(chat => chat.is_archived !== true).length || 0;
   }
 
   getUnreadCount(): number {
-    return this.chats?.filter(chat => chat.unread_count > 0).length || 0;
+    return this.chats?.filter(chat => chat.unread_count > 0 && chat.is_archived !== true).length || 0;
   }
 
   getArchivedCount(): number {
     return this.chats?.filter(chat => chat.is_archived === true).length || 0;
   }
 
-  // Format the time to display as "Today", "Yesterday", or the date
   formatTime(timestamp: string): string {
     if (!timestamp) return '';
 
@@ -125,27 +153,22 @@ export class ChatListComponent implements OnInit {
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
 
-    // Check if it's today
     if (date.toDateString() === now.toDateString()) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Check if it's yesterday
     if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     }
 
-    // Check if it's within the current week
     const dayDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
     if (dayDiff < 7) {
       return date.toLocaleDateString([], { weekday: 'short' });
     }
 
-    // Otherwise return the date
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 
-  // Check if message is from today
   isTodayMessage(timestamp: string): boolean {
     if (!timestamp) return false;
     const date = new Date(timestamp);
@@ -153,7 +176,6 @@ export class ChatListComponent implements OnInit {
     return date.toDateString() === now.toDateString();
   }
 
-  // Truncate a message if it's too long
   truncateMessage(message: string, maxLength: number = 40): string {
     if (!message) return '';
     return message.length > maxLength
@@ -161,7 +183,6 @@ export class ChatListComponent implements OnInit {
       : message;
   }
 
-  // Highlight search terms in text
   highlightSearchTerm(text: string): string {
     if (!this.searchQuery || !text) return text;
 
