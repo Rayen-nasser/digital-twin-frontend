@@ -374,6 +374,23 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     this.reportMessageEvent.emit(`contact:${this.currentChatId}`)
   }
 
+archiveConversation() {
+  if (!this.currentChatId || !this.currentChat) return
+
+  this.chatService.archiveChat(this.currentChatId).subscribe({
+    next: () => {
+      this.toastr.success("Conversation archived")
+      this.showOptions = false
+      // No need to manually emit - the service does it automatically
+    },
+    error: (error) => {
+      console.error("Error archiving conversation:", error);
+      this.toastr.error("Failed to archive conversation")
+    },
+  })
+}
+
+
   // Message action handler
   handleMessageAction(actionData: { action: string; messageId: string; reportData?: any }): void {
     console.log("Action received:", actionData)
