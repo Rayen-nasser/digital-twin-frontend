@@ -7,6 +7,7 @@ import { ChatService } from "../../services/chat.service"
 import { WebsocketService } from "../../services/websocket.service"
 import { ThemeService } from "../../../core/services/theme.service"
 import { ToastrService } from "ngx-toastr"
+import { StreamingService } from "../../services/streaming.service"
 
 @Component({
   selector: "app-chat-window",
@@ -48,6 +49,10 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
   private lastScrollTop = 0
   private scrollToBottomOnNextRender = false
 
+  // Streaming properties
+  showStreamingPanel = false
+  isStreamingActive = false
+
   constructor(
     private chatService: ChatService,
     private wsService: WebsocketService,
@@ -55,6 +60,7 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     private themeService: ThemeService,
     private ngZone: NgZone,
     private toastr: ToastrService,
+    private streamingService: StreamingService,
   ) {}
 
   ngOnInit(): void {
@@ -649,5 +655,45 @@ archiveConversation() {
       console.error("Invalid URL format for cursor", nextUrl)
       return null
     }
+  }
+
+  // Handle streaming events
+  onStreamingEvent(event: any): void {
+    console.log("Streaming event:", event)
+    switch (event.type) {
+      case "session_started":
+        this.toastr.success("AI Avatar streaming started")
+        break
+      case "session_ended":
+        this.toastr.info("AI Avatar streaming ended")
+        break
+      case "message_sent":
+        this.toastr.success("Message sent to avatar")
+        break
+      case "error":
+        this.toastr.error(`Streaming error: ${event.data.error}`)
+        break
+    }
+  }
+
+  // Send message to both chat and streaming
+  sendMessageToStreaming(text: string): void {
+    if (this.isStreamingActive) {
+      this.streamingService.sendText(text).subscribe({
+        next: (response) => {
+          console.log("Message sent to streaming:", response)
+          this.toastr.success("Message sent to AI avatar")
+        },
+        error: (error) => {
+          console.error("Error sending to streaming:", error)
+          this.toastr.error("Failed to send message to AI avatar")
+        },
+      })
+    }
+  }
+
+  // Toggle streaming panel
+  toggleStreamingPanel(): void {
+    this.showStreamingPanel = !this.showStreamingPanel
   }
 }

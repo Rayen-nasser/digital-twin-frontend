@@ -3,7 +3,6 @@ import { Component, OnInit, OnDestroy, HostListener, PLATFORM_ID, Inject, ViewCh
 import { isPlatformBrowser } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
 import { WebsocketService } from '../../services/websocket.service';
-import { HeyGenStreamingService } from '../../services/heygen-streaming.service';
 import { Observable, Subject, takeUntil, combineLatest } from 'rxjs';
 import { Chat } from '../../models/chat.model';
 import { Message } from '../../models/message.model';
@@ -47,7 +46,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private chatService: ChatService,
     private wsService: WebsocketService,
     private authService: AuthService,
-    private heygenService: HeyGenStreamingService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private toasterService: ToastrService
   ) {
@@ -82,14 +80,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe(connected => {
         console.log('Dashboard - WebSocket connection status:', connected);
         this.isWebSocketConnected = connected;
-      });
-
-    // Monitor HeyGen streaming status
-    this.heygenService.sessionStatus$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(status => {
-        this.isStreamingActive = this.heygenService.isSessionActive();
-        console.log('HeyGen streaming status:', status);
       });
   }
 
@@ -146,26 +136,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-
-  // Stop streaming session
-  stopStreamingSession(): void {
-    if (this.heygenStreamingComponent) {
-      this.heygenStreamingComponent.stopStreaming();
-    } else {
-      this.heygenService.stopStreaming()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            console.log('Streaming stopped:', response);
-            this.toasterService.info('AI Avatar streaming stopped');
-          },
-          error: (error) => {
-            console.error('Error stopping streaming:', error);
-            this.toasterService.error('Failed to stop AI Avatar streaming');
-          }
-        });
-    }
-  }
 
   // Generate content from chat and stream
   generateAndStreamFromChat(): void {
@@ -339,11 +309,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Stop streaming session if active
-    if (this.isStreamingActive) {
-      this.stopStreamingSession();
-    }
-
     // Clean up websocket connection
     this.wsService.disconnect();
 

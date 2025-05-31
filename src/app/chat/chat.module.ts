@@ -10,8 +10,8 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from "../shared/shared.module";
 import { MessageComponent } from './components/message/message.component';
 import { ReportModalComponent } from './components/report-modal/report-modal.component';
-import { HeyGenStreamingComponent } from './components/heygen-streaming/heygen-streaming.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { StreamingPanelComponent } from './components/streaming-panel/streaming-panel.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +21,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     DashboardComponent,
     MessageComponent,
     ReportModalComponent,
-    HeyGenStreamingComponent
+    StreamingPanelComponent
   ],
   imports: [CommonModule, ChatRoutingModule, FormsModule, SharedModule, ReactiveFormsModule],
 })
