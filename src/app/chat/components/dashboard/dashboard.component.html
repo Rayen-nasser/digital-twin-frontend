@@ -42,6 +42,12 @@
         Messages
       </h1>
 
+      <!-- Twin indicator -->
+      <div *ngIf="currentChatIsTwin"
+           class="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-xs rounded-full">
+        Twin Chat
+      </div>
+
       <!-- New Chat button - Now as an icon button in the top bar -->
       <button
         (click)="createNewChat()"
@@ -215,9 +221,12 @@
       >
       </app-chat-window>
 
-      <!-- Chat input -->
+      <!-- Chat input with twin support -->
       <app-chat-input
         [isConnected]="isWebSocketConnected"
+        [currentChatId]="currentChatId"
+        [isTwinChat]="currentChatIsTwin"
+        [twinId]="currentTwinId"
         (sendMessage)="onSendMessage($event)"
         class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200"
       >
