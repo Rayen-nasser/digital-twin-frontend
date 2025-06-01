@@ -12,6 +12,7 @@ export interface Twin {
     username: string;
     display_name: string;
   };
+  sentiment: string;
   persona_data: {
     persona_description: string;
     conversations: Array<{

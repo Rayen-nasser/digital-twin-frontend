@@ -1,4 +1,4 @@
-// detail-twin.component.ts
+// detail-twin.component.ts - Add sentiment functionality
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -24,10 +24,10 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
   showDeleteModal = false;
   isSaving: boolean = false;
 
-  // Add these properties to your DetailTwinComponent class
-showShareModal = false;
-shareForm: FormGroup;
-isSharing = false;
+  // Share modal properties
+  showShareModal = false;
+  shareForm: FormGroup;
+  isSharing = false;
 
   // Destroy notifier
   private destroy$ = new Subject<void>();
@@ -42,11 +42,11 @@ isSharing = false;
   ) {
     super(fb, themeService);
 
-  // Initialize share form
-  this.shareForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    expirationDays: [7, [Validators.required, Validators.min(1), Validators.max(365)]],
-  });
+    // Initialize share form
+    this.shareForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      expirationDays: [7, [Validators.required, Validators.min(1), Validators.max(365)]],
+    });
   }
 
   override ngOnInit(): void {
@@ -79,6 +79,11 @@ isSharing = false;
           this.populateForm(twin);
           this.isLoading = false;
         },
+        error: (err) => {
+          this.isLoading = false;
+          this.error = 'Failed to load twin details';
+          console.error('Error loading twin:', err);
+        }
       });
   }
 
@@ -98,6 +103,12 @@ isSharing = false;
       is_active: twin.is_active
     });
 
+    // Set sentiment data if available
+    if (twin.sentiment) {
+      // Parse sentiment string back to form structure for editing
+      this.parseSentimentString(twin.sentiment);
+    }
+
     // Set persona data
     if (twin.persona_data) {
       this.personaData.get('persona_description')?.setValue(twin.persona_data.persona_description);
@@ -116,14 +127,45 @@ isSharing = false;
     }
   }
 
-  toggleEditMode(): void {
-    this.isEditMode = !this.isEditMode;
+  // Parse sentiment string back to form structure for editing
+  parseSentimentString(sentimentString: string): void {
+    if (!sentimentString) return;
 
-    // If canceling edit, reset form to original values
-    if (!this.isEditMode && this.twin) {
-      this.populateForm(this.twin);
-      this.handleNotification('info', 'Edit canceled', 'Changes have been discarded');
-    }
+    const parts = sentimentString.split(' | ');
+    const selectedSentiments: string[] = [];
+    let customSentiment = '';
+    let intensityLevel = 'medium';
+
+    parts.forEach(part => {
+      if (part.startsWith('Traits: ')) {
+        const traitsText = part.replace('Traits: ', '');
+        const traitLabels = traitsText.split(', ');
+
+        // Convert labels back to values
+        traitLabels.forEach(label => {
+          for (const category of this.sentimentCategories) {
+            const option = category.options.find(opt => opt.label === label);
+            if (option) {
+              selectedSentiments.push(option.value);
+            }
+          }
+        });
+      } else if (part.startsWith('Intensity: ')) {
+        intensityLevel = part.replace('Intensity: ', '').toLowerCase();
+      } else if (part.startsWith('Custom: ')) {
+        customSentiment = part.replace('Custom: ', '');
+        this.showCustomSentimentInput = true;
+      }
+    });
+
+    // Set sentiment form values
+    this.sentimentAttachment.patchValue({
+      selected_sentiments: selectedSentiments,
+      custom_sentiment: customSentiment,
+      intensity_level: intensityLevel
+    });
+
+    this.selectedSentiments = selectedSentiments;
   }
 
   saveChanges(): void {
@@ -133,13 +175,17 @@ isSharing = false;
     }
 
     this.isProcessing = true;
-    this.isSaving = true
+    this.isSaving = true;
 
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('name', this.twinForm.get('name')?.value);
     formData.append('privacy_setting', this.twinForm.get('privacy_setting')?.value);
     formData.append('is_active', this.twinForm.get('is_active')?.value);
+
+    // Add sentiment as string
+    const sentimentString = this.twinForm.get('sentiment')?.value || '';
+    formData.append('sentiment', sentimentString);
 
     const personaData = {
       persona_description: this.personaData.get('persona_description')?.value,
@@ -158,15 +204,28 @@ isSharing = false;
         this.isEditMode = false;
         this.twin = response;
         this.populateForm(response);
-        this.isSaving = false
+        this.isSaving = false;
         this.handleNotification('success', 'Changes saved', 'Twin has been updated successfully');
       },
       error: (err) => {
         this.isProcessing = false;
+        this.isSaving = false;
         console.error('Error updating twin:', err);
         this.handleNotification('error', 'Error saving changes', 'Failed to update twin');
       }
     });
+  }
+
+  // ... rest of existing methods remain the same ...
+
+  toggleEditMode(): void {
+    this.isEditMode = !this.isEditMode;
+
+    // If canceling edit, reset form to original values
+    if (!this.isEditMode && this.twin) {
+      this.populateForm(this.twin);
+      this.handleNotification('info', 'Edit canceled', 'Changes have been discarded');
+    }
   }
 
   toggleActiveStatus(): void {
@@ -174,7 +233,6 @@ isSharing = false;
 
     this.twinService.toggleTwinActive(this.twinId).subscribe({
       next: (response: Twin) => {
-        // Update twin in local state
         if (this.twin) {
           this.twin.is_active = response.is_active;
           this.twinForm.get('is_active')?.setValue(response.is_active);
@@ -190,6 +248,48 @@ isSharing = false;
     });
   }
 
+  // Share functionality
+  shareTwin(): void {
+    this.showShareModal = true;
+  }
+
+  submitShareForm(): void {
+    if (this.shareForm.invalid) {
+      this.markFormGroupTouched(this.shareForm);
+      return;
+    }
+
+    this.isSharing = true;
+
+    const shareData = {
+      user_email: this.shareForm.get('email')?.value,
+      expires_in_days: this.shareForm.get('expirationDays')?.value,
+    };
+
+    this.twinService.shareTwin(this.twinId, shareData).subscribe({
+      next: (response: any) => {
+        this.isSharing = false;
+        this.closeShareModal();
+        this.handleNotification('success', 'Twin Shared',
+          `Successfully shared ${this.twin?.name} with ${shareData.user_email}`);
+      },
+      error: (err: any) => {
+        this.isSharing = false;
+        console.error('Error sharing twin:', err);
+        this.handleNotification('error', 'Error Sharing Twin',
+          'Failed to share twin. Please try again.');
+      }
+    });
+  }
+
+  closeShareModal(): void {
+    this.showShareModal = false;
+    this.shareForm.reset({
+      expirationDays: 7
+    });
+  }
+
+  // Delete functionality
   openDeleteConfirmation(): void {
     this.showDeleteModal = true;
   }
@@ -220,7 +320,6 @@ isSharing = false;
       next: (response: Twin) => {
         this.handleNotification('success', 'Twin duplicated',
           `Successfully created a copy of ${this.twin?.name}`);
-        // Navigate to the new twin
         this.router.navigate(['/twin', response.id]);
       },
       error: (err) => {
@@ -233,62 +332,6 @@ isSharing = false;
   chatWithTwin(): void {
     this.router.navigate(['/chat/dashboard']);
   }
-
-// Add these methods to your DetailTwinComponent class
-shareTwin(): void {
-  this.showShareModal = true;
-}
-
-submitShareForm(): void {
-  if (this.shareForm.invalid) {
-    this.markFormGroupTouched(this.shareForm);
-    return;
-  }
-
-  this.isSharing = true;
-
-  const shareData = {
-    user_email: this.shareForm.get('email')?.value,
-    expires_in_days: this.shareForm.get('expirationDays')?.value,
-  };
-
-  // Call your service method to share the twin
-  this.twinService.shareTwin(this.twinId, shareData).subscribe({
-    next: (response: any) => {
-      this.isSharing = false;
-      this.closeShareModal();
-      this.handleNotification('success', 'Twin Shared',
-        `Successfully shared ${this.twin?.name} with ${shareData.user_email}`);
-    },
-    error: (err: any) => {
-      this.isSharing = false;
-      console.error('Error sharing twin:', err);
-      this.handleNotification('error', 'Error Sharing Twin',
-        'Failed to share twin. Please try again.');
-    }
-  });
-}
-
-closeShareModal(): void {
-  this.showShareModal = false;
-  this.shareForm.reset({
-    expirationDays: 7,
-    allowChat: true,
-    allowView: true
-  });
-}
-
-// Helper method to mark all form controls as touched for validation
-  override markFormGroupTouched(formGroup: FormGroup) {
-  Object.values(formGroup.controls).forEach(control => {
-    control.markAsTouched();
-
-    if (control instanceof FormGroup) {
-      this.markFormGroupTouched(control);
-    }
-  });
-}
-
 
   goBack(): void {
     this.router.navigate(['/twin']);

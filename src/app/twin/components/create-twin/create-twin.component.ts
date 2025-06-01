@@ -7,7 +7,6 @@ import { TwinService } from '../../service/twin.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { TwinFormBaseComponent } from '../../../shared/components/twin-form-base/twin-form-base.component';
 
-
 @Component({
   selector: 'app-create-twin',
   templateUrl: './create-twin.component.html',
@@ -25,6 +24,7 @@ export class CreateTwinComponent extends TwinFormBaseComponent {
     super(fb, themeService);
   }
 
+  // Override Update onSubmit method
   onSubmit(): void {
     if (this.twinForm.invalid) {
       this.markFormGroupTouched(this.twinForm);
@@ -32,12 +32,19 @@ export class CreateTwinComponent extends TwinFormBaseComponent {
     }
 
     this.isProcessing = true;
-    this.isSubmitting = true
+    this.isSubmitting = true;
 
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('name', this.twinForm.get('name')?.value);
-    formData.append('privacy_setting', this.twinForm.get('privacy_setting')?.value);
+    formData.append(
+      'privacy_setting',
+      this.twinForm.get('privacy_setting')?.value
+    );
+
+    // Send sentiment as simple string with key "sentiment"
+    const sentimentString = this.twinForm.get('sentiment')?.value || '';
+    formData.append('sentiment', sentimentString);
 
     const personaData = {
       persona_description: this.personaData.get('persona_description')?.value,
@@ -52,20 +59,29 @@ export class CreateTwinComponent extends TwinFormBaseComponent {
     this.twinService.createTwin(formData).subscribe({
       next: (response) => {
         this.isProcessing = false;
-        this.isSubmitting = false
-        this.handleNotification('success', 'Twin Created', 'Your digital twin has been created successfully');
+        this.isSubmitting = false;
+        this.handleNotification(
+          'success',
+          'Twin Created',
+          'Your digital twin has been created successfully'
+        );
         this.router.navigate(['/twins', response.id]);
       },
       error: (error) => {
         this.isProcessing = false;
+        this.isSubmitting = false;
         console.error('Error creating twin:', error);
-        this.handleNotification('error', 'Creation Failed', 'There was a problem creating your twin');
+        this.handleNotification(
+          'error',
+          'Creation Failed',
+          'There was a problem creating your twin'
+        );
       },
     });
   }
 
   handleNotification(type: string, title: string, message: string): void {
-    switch(type) {
+    switch (type) {
       case 'success':
         this.toastService.success(message, title);
         break;

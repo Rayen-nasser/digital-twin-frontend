@@ -1,7 +1,11 @@
 <!-- digital-twin-create.component.html -->
 <div class="container mx-auto px-2 sm:px-4 py-8 sm:py-12 md:py-16 max-w-4xl">
-  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-0">
+  <div
+    class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6"
+  >
+    <h1
+      class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-0"
+    >
       Create Digital Twin
     </h1>
   </div>
@@ -9,7 +13,9 @@
   <form [formGroup]="twinForm" (ngSubmit)="onSubmit()" class="space-y-6">
     <!-- Basic Info Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-      <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+      <h2
+        class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200"
+      >
         Basic Information
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -18,7 +24,8 @@
             for="name"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            <span class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
+            <span
+              class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
               >Twin Name <span class="text-red-500">*</span></span
             >
           </label>
@@ -49,7 +56,8 @@
             for="privacy"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            <span class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
+            <span
+              class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100"
               >Privacy Setting <span class="text-red-500">*</span></span
             >
           </label>
@@ -71,7 +79,9 @@
 
     <!-- Avatar Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-      <h2 class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
+      <h2
+        class="text-lg sm:text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200"
+      >
         Avatar
       </h2>
 
@@ -135,7 +145,9 @@
           />
         </div>
 
-        <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm text-center">
+        <p
+          class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm text-center"
+        >
           Upload a square image for best results. Will be resized to 500x500px
           if larger.
         </p>
@@ -147,8 +159,12 @@
       class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
       formGroupName="persona_data"
     >
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
-        <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4"
+      >
+        <h2
+          class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200"
+        >
           Persona Description <span class="text-red-500">*</span>
         </h2>
         <div class="flex space-x-2 mb-2 sm:mb-0">
@@ -223,13 +239,252 @@
       </div>
     </div>
 
+    <!-- Enhanced Sentiment Attachment Section for HTML template -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
+      formGroupName="sentiment_attachment"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4"
+      >
+        <h2
+          class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200"
+        >
+          Sentiment & Personality <span class="text-red-500">*</span>
+        </h2>
+        <div class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          Choose multiple traits that define your twin's emotional style
+        </div>
+      </div>
+
+      <!-- Sentiment Categories -->
+      <div class="space-y-6">
+        <div
+          *ngFor="let category of sentimentCategories"
+          class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+        >
+          <h3
+            class="text-base font-medium text-gray-800 dark:text-gray-200 mb-3"
+          >
+            {{ category.category }}
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div
+              *ngFor="let option of category.options"
+              class="relative cursor-pointer"
+              (click)="toggleSentiment(option.value)"
+            >
+              <div
+                class="p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md"
+                [ngClass]="{
+                  'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400':
+                    isSentimentSelected(option.value),
+                  'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500':
+                    !isSentimentSelected(option.value)
+                }"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center">
+                      <span
+                        class="text-sm font-medium"
+                        [ngClass]="{
+                          'text-blue-700 dark:text-blue-300':
+                            isSentimentSelected(option.value),
+                          'text-gray-700 dark:text-gray-200':
+                            !isSentimentSelected(option.value)
+                        }"
+                      >
+                        {{ option.label }}
+                      </span>
+                      <svg
+                        *ngIf="isSentimentSelected(option.value)"
+                        class="ml-2 h-4 w-4 text-blue-600 dark:text-blue-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                    <p
+                      class="text-xs mt-1"
+                      [ngClass]="{
+                        'text-blue-600 dark:text-blue-400': isSentimentSelected(
+                          option.value
+                        ),
+                        'text-gray-500 dark:text-gray-400':
+                          !isSentimentSelected(option.value)
+                      }"
+                    >
+                      {{ option.description }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intensity Level -->
+      <div
+        class="mt-6 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+      >
+        <h3 class="text-base font-medium text-gray-800 dark:text-gray-200 mb-3">
+          Intensity Level
+        </h3>
+        <div class="flex space-x-4">
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="radio"
+              formControlName="intensity_level"
+              value="subtle"
+              class="sr-only"
+            />
+            <div
+              class="w-4 h-4 rounded-full border-2 mr-2 flex items-center justify-center"
+              [ngClass]="{
+                'border-blue-500 bg-blue-500':
+                  sentimentAttachment.get('intensity_level')?.value ===
+                  'subtle',
+                'border-gray-300 dark:border-gray-600':
+                  sentimentAttachment.get('intensity_level')?.value !== 'subtle'
+              }"
+            >
+              <div
+                *ngIf="
+                  sentimentAttachment.get('intensity_level')?.value === 'subtle'
+                "
+                class="w-2 h-2 rounded-full bg-white"
+              ></div>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">Subtle</span>
+          </label>
+
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="radio"
+              formControlName="intensity_level"
+              value="medium"
+              class="sr-only"
+            />
+            <div
+              class="w-4 h-4 rounded-full border-2 mr-2 flex items-center justify-center"
+              [ngClass]="{
+                'border-blue-500 bg-blue-500':
+                  sentimentAttachment.get('intensity_level')?.value ===
+                  'medium',
+                'border-gray-300 dark:border-gray-600':
+                  sentimentAttachment.get('intensity_level')?.value !== 'medium'
+              }"
+            >
+              <div
+                *ngIf="
+                  sentimentAttachment.get('intensity_level')?.value === 'medium'
+                "
+                class="w-2 h-2 rounded-full bg-white"
+              ></div>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">Medium</span>
+          </label>
+
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="radio"
+              formControlName="intensity_level"
+              value="strong"
+              class="sr-only"
+            />
+            <div
+              class="w-4 h-4 rounded-full border-2 mr-2 flex items-center justify-center"
+              [ngClass]="{
+                'border-blue-500 bg-blue-500':
+                  sentimentAttachment.get('intensity_level')?.value ===
+                  'strong',
+                'border-gray-300 dark:border-gray-600':
+                  sentimentAttachment.get('intensity_level')?.value !== 'strong'
+              }"
+            >
+              <div
+                *ngIf="
+                  sentimentAttachment.get('intensity_level')?.value === 'strong'
+                "
+                class="w-2 h-2 rounded-full bg-white"
+              ></div>
+            </div>
+            <span class="text-sm text-gray-700 dark:text-gray-300">Strong</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Custom Sentiment Input -->
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-medium text-gray-800 dark:text-gray-200">
+            Custom Sentiment (Optional)
+          </h3>
+          <button
+            type="button"
+            (click)="toggleCustomSentimentInput()"
+            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none"
+          >
+            {{ showCustomSentimentInput ? "Hide" : "Add Custom" }}
+          </button>
+        </div>
+
+        <div *ngIf="showCustomSentimentInput" class="space-y-3">
+          <textarea
+            formControlName="custom_sentiment"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            placeholder="Describe any specific emotional traits or behaviors not covered above..."
+          ></textarea>
+          <div class="flex justify-end">
+            <span
+              class="text-xs"
+              [ngClass]="{
+                'text-gray-500 dark:text-gray-400':
+                  sentimentAttachment.get('custom_sentiment')?.value?.length <=
+                  270,
+                'text-red-500 dark:text-red-400':
+                  sentimentAttachment.get('custom_sentiment')?.value?.length >
+                  270
+              }"
+            >
+              {{
+                sentimentAttachment.get("custom_sentiment")?.value?.length || 0
+              }}/300
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="mt-6 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Sentiment Summary:
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          {{ getSentimentSummary() }}
+        </p>
+      </div>
+    </div>
+
     <!-- Conversation Examples Section -->
     <div
       formGroupName="persona_data"
       class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6"
     >
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
-        <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4"
+      >
+        <h2
+          class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0 text-gray-700 dark:text-gray-200"
+        >
           Conversation Examples
         </h2>
         <button
@@ -288,7 +543,9 @@
               >
                 {{ i + 1 }}
               </span>
-              <h3 class="font-medium text-gray-800 dark:text-gray-200 truncate text-sm sm:text-base">
+              <h3
+                class="font-medium text-gray-800 dark:text-gray-200 truncate text-sm sm:text-base"
+              >
                 {{
                   (conversation.get("question")?.value | slice : 0 : 30) ||
                     "New Example"
@@ -298,7 +555,9 @@
               </h3>
             </div>
 
-            <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2">
+            <div
+              class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2"
+            >
               <button
                 type="button"
                 (click)="removeConversation(i, $event)"
@@ -499,7 +758,9 @@
       class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md p-4 sm:p-6 shadow-xl"
     >
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h3
+          class="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100"
+        >
           Import Persona Data
         </h3>
         <button
