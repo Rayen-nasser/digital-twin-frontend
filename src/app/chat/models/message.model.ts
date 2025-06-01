@@ -23,8 +23,10 @@ reply_to?: any;
     created_at: string;
     is_processed: boolean;
     transcription?: string;
+    storage_path?: string;
+    file_url?: string;
   };
-  file_attachment?: string;
+  file_attachment?: any;
   file_details?: {
     id: string;
     original_name: string;
@@ -35,10 +37,12 @@ reply_to?: any;
     is_public: boolean;
     thumbnail_path?: string;
     dimensions?: string;
+    file_url?: string;
   };
   created_at: string;
   status: 'sent' | 'delivered' | 'read' | 'sending'| 'error';
   status_updated_at: string;
   duration_seconds?: number;
   file_preview_url?: string;
+  twin_id?: string;
 }

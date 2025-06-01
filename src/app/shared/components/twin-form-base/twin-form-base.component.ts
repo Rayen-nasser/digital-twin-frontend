@@ -31,6 +31,44 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
     { value: 'shared', label: 'Shared (Shared with selected users)' }
   ];
 
+  // Sentiment configuration
+  sentimentCategories = [
+    {
+      category: 'Emotional Tone',
+      options: [
+        { value: 'warm', label: 'Warm & Caring', description: 'Expresses empathy and emotional support' },
+        { value: 'professional', label: 'Professional', description: 'Maintains formal and respectful tone' },
+        { value: 'friendly', label: 'Friendly & Casual', description: 'Approachable and conversational' },
+        { value: 'enthusiastic', label: 'Enthusiastic', description: 'Energetic and positive responses' },
+        { value: 'calm', label: 'Calm & Measured', description: 'Thoughtful and composed responses' }
+      ]
+    },
+    {
+      category: 'Attachment Style',
+      options: [
+        { value: 'supportive', label: 'Supportive', description: 'Provides encouragement and validation' },
+        { value: 'independent', label: 'Independent', description: 'Encourages self-reliance and growth' },
+        { value: 'nurturing', label: 'Nurturing', description: 'Protective and caring approach' },
+        { value: 'collaborative', label: 'Collaborative', description: 'Works together to solve problems' },
+        { value: 'mentoring', label: 'Mentoring', description: 'Guides and teaches through experience' }
+      ]
+    },
+    {
+      category: 'Communication Style',
+      options: [
+        { value: 'direct', label: 'Direct & Clear', description: 'Straightforward communication' },
+        { value: 'gentle', label: 'Gentle & Soft', description: 'Kind and considerate approach' },
+        { value: 'humorous', label: 'Humorous', description: 'Uses appropriate humor and lightness' },
+        { value: 'analytical', label: 'Analytical', description: 'Logical and detail-oriented responses' },
+        { value: 'creative', label: 'Creative & Expressive', description: 'Imaginative and artistic communication' }
+      ]
+    }
+  ];
+
+  selectedSentiments: string[] = [];
+  customSentiment: string = '';
+  showCustomSentimentInput: boolean = false;
+
   constructor(
     protected fb: FormBuilder,
     protected themeService: ThemeService
@@ -38,19 +76,64 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
     this.twinForm = this.createForm();
   }
 
-  ngOnInit(): void {
-    // Subscribe to theme changes
-    this.themeSubscription = this.themeService.theme$.subscribe(theme => {
-      this.isDarkMode = theme === 'dark';
-      // Additional theme-related logic can be added here
-    });
-  }
+// Override ngOnInit to set up form value changes subscription
+ngOnInit(): void {
+  // Subscribe to theme changes
+  this.themeSubscription = this.themeService.theme$.subscribe(theme => {
+    this.isDarkMode = theme === 'dark';
+  });
+
+  // Subscribe to sentiment form changes to update string value
+  this.sentimentAttachment.valueChanges.subscribe(() => {
+    this.updateSentimentString();
+  });
+}
 
   ngOnDestroy(): void {
     if (this.themeSubscription) {
       this.themeSubscription.unsubscribe();
     }
   }
+
+  // Update sentiment string whenever UI changes
+updateSentimentString(): void {
+  const sentimentString = this.generateSentimentString();
+  this.twinForm.get('sentiment')?.setValue(sentimentString);
+}
+
+
+// Add method to convert sentiment data to string
+generateSentimentString(): string {
+  const selectedSentiments = this.sentimentAttachment.get('selected_sentiments')?.value || [];
+  const customSentiment = this.sentimentAttachment.get('custom_sentiment')?.value || '';
+  const intensityLevel = this.sentimentAttachment.get('intensity_level')?.value || 'medium';
+
+  let sentimentParts: string[] = [];
+
+  // Add selected sentiments with their labels
+  if (selectedSentiments.length > 0) {
+    const sentimentLabels = selectedSentiments.map((value: string) => {
+      for (const category of this.sentimentCategories) {
+        const option = category.options.find(opt => opt.value === value);
+        if (option) return option.label;
+      }
+      return value;
+    });
+    sentimentParts.push(`Traits: ${sentimentLabels.join(', ')}`);
+  }
+
+  // Add intensity level
+  if (selectedSentiments.length > 0) {
+    sentimentParts.push(`Intensity: ${intensityLevel}`);
+  }
+
+  // Add custom sentiment
+  if (customSentiment.trim()) {
+    sentimentParts.push(`Custom: ${customSentiment.trim()}`);
+  }
+
+  return sentimentParts.join(' | ');
+}
 
   createForm(): FormGroup {
     return this.fb.group({
@@ -64,8 +147,69 @@ export abstract class TwinFormBaseComponent implements OnInit, OnDestroy {
         ],
         conversations: this.fb.array([])
       }),
+     sentiment: [''], // Changed to simple string field
+      sentiment_attachment: this.fb.group({
+        selected_sentiments: [[]],
+        custom_sentiment: ['', [Validators.maxLength(300)]],
+        intensity_level: ['medium']
+      }),
       avatar_image: [null]
     });
+  }
+
+
+  get sentimentAttachment() {
+    return this.twinForm.get('sentiment_attachment') as FormGroup;
+  }
+
+  toggleSentiment(sentimentValue: string): void {
+  const currentSentiments = this.sentimentAttachment.get('selected_sentiments')?.value || [];
+  const index = currentSentiments.indexOf(sentimentValue);
+
+  if (index > -1) {
+    currentSentiments.splice(index, 1);
+  } else {
+    currentSentiments.push(sentimentValue);
+  }
+
+  this.sentimentAttachment.get('selected_sentiments')?.setValue([...currentSentiments]);
+  this.selectedSentiments = [...currentSentiments];
+  this.updateSentimentString(); // Update the string value
+}
+
+  isSentimentSelected(sentimentValue: string): boolean {
+    const currentSentiments = this.sentimentAttachment.get('selected_sentiments')?.value || [];
+    return currentSentiments.includes(sentimentValue);
+  }
+
+  toggleCustomSentimentInput(): void {
+    this.showCustomSentimentInput = !this.showCustomSentimentInput;
+    if (!this.showCustomSentimentInput) {
+      this.sentimentAttachment.get('custom_sentiment')?.setValue('');
+    }
+  }
+
+  getSentimentSummary(): string {
+    const selected = this.sentimentAttachment.get('selected_sentiments')?.value || [];
+    const custom = this.sentimentAttachment.get('custom_sentiment')?.value || '';
+
+    let summary = '';
+    if (selected.length > 0) {
+      const labels = selected.map((value: string) => {
+        for (const category of this.sentimentCategories) {
+          const option = category.options.find(opt => opt.value === value);
+          if (option) return option.label;
+        }
+        return value;
+      });
+      summary = labels.join(', ');
+    }
+
+    if (custom) {
+      summary += summary ? ` + Custom: ${custom}` : `Custom: ${custom}`;
+    }
+
+    return summary || 'No sentiment defined';
   }
 
   get personaData() {

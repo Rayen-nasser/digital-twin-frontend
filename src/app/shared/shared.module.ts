@@ -8,14 +8,13 @@ import { HomePageComponent } from './components/homepage/homepage.component';
 import { ThemeToggleComponent } from './components/theme-toggle/theme-toggle.component';
 import { SettingsMenuComponent } from './components/settings-menu/settings-menu.component';
 
-
 @NgModule({
   declarations: [
     HeaderComponent,
     FooterComponent,
     HomePageComponent,
     ThemeToggleComponent,
-    SettingsMenuComponent
+    SettingsMenuComponent,
   ],
   imports: [
     CommonModule,
@@ -28,7 +27,7 @@ import { SettingsMenuComponent } from './components/settings-menu/settings-menu.
     FooterComponent,
     HomePageComponent,
     ThemeToggleComponent,
-    SettingsMenuComponent
+    SettingsMenuComponent,
   ]
 })
 export class SharedModule { }
