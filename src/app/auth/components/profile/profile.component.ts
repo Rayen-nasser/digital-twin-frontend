@@ -31,6 +31,7 @@ export class ProfileComponent implements OnInit {
   isImageDeleting: boolean = false;
   @ViewChild('fileInput') fileInput!: ElementRef;
   isSubmitting: boolean = false;
+  showDeleteConfirmation = false;
 
   constructor(
     private authService: AuthService,
@@ -353,6 +354,23 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.updateError = 'Failed to resend verification email. Please try again later.';
+      }
+    });
+  }
+
+  confirmDeleteAccount() {
+    this.showDeleteConfirmation = true;
+  }
+
+  deleteAccount() {
+    this.authService.deleteAccount().subscribe({
+      next: () => {
+        this.showDeleteConfirmation = false;
+        this.router.navigate(['/auth/login']);
+      },
+      error: (error: Error) => {
+        console.error('Error deleting account:', error);
+        // Handle error appropriately
       }
     });
   }
