@@ -8,6 +8,8 @@ import { Subject } from 'rxjs';
 import { TwinService, Twin } from '../../service/twin.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { TwinFormBaseComponent } from '../../../shared/components/twin-form-base/twin-form-base.component';
+import { AuthService } from '../../../auth/service/auth.service';
+import { ChatService } from '../../../chat/services/chat.service';
 
 @Component({
   selector: 'app-detail-twin',
@@ -23,6 +25,7 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
   originalImageUrl: string | null = null;
   showDeleteModal = false;
   isSaving: boolean = false;
+  isAuthenticated = false
 
   // Share modal properties
   showShareModal = false;
@@ -37,7 +40,9 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
     protected override themeService: ThemeService,
     private twinService: TwinService,
     private route: ActivatedRoute,
+    private authService: AuthService,
     private router: Router,
+    private chatService: ChatService,
     private toastService: ToastrService
   ) {
     super(fb, themeService);
@@ -51,6 +56,8 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
 
   override ngOnInit(): void {
     super.ngOnInit();
+
+    this.isAuthenticated = this.authService.isLoggedIn();
 
     // Get twin ID from route params
     this.route.params
@@ -329,8 +336,47 @@ export class DetailTwinComponent extends TwinFormBaseComponent implements OnInit
     });
   }
 
-  chatWithTwin(): void {
-    this.router.navigate(['/chat/dashboard']);
+  chatWithTwin(twin: Twin, $event: MouseEvent) {
+    $event.stopPropagation();
+
+    // Check if user is authenticated
+    if (!this.isAuthenticated) {
+      this.toastService.info(
+        'Authentication required',
+        'Please log in to chat with twins'
+      );
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    this.chatService.getChatByTwin(twin.id).subscribe({
+      next: (existingChat: any) => {
+        if (existingChat) {
+          this.router.navigate(['/chat/dashboard']);
+        } else {
+          const payload = {
+            twin: twin.id,
+          };
+
+          this.chatService.CreateChat(payload).subscribe({
+            next: (response: any) => {
+              console.log('Chat created:', response);
+              this.router.navigate(['/chat/dashboard']);
+            },
+            error: (error: any) => {
+              console.error('Error creating chat:', error);
+              this.toastService.error('Failed to create chat');
+            },
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error checking existing chat:', error);
+        this.toastService.error('Failed to check existing chat');
+      },
+    });
   }
 
   goBack(): void {
