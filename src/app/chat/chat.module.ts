@@ -11,8 +11,6 @@ import { SharedModule } from "../shared/shared.module";
 import { MessageComponent } from './components/message/message.component';
 import { ReportModalComponent } from './components/report-modal/report-modal.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { StreamingPanelComponent } from './components/streaming-panel/streaming-panel.component';
-
 @NgModule({
   declarations: [
     ChatListComponent,
@@ -21,7 +19,6 @@ import { StreamingPanelComponent } from './components/streaming-panel/streaming-
     DashboardComponent,
     MessageComponent,
     ReportModalComponent,
-    StreamingPanelComponent
   ],
   imports: [CommonModule, ChatRoutingModule, FormsModule, SharedModule, ReactiveFormsModule],
 })
