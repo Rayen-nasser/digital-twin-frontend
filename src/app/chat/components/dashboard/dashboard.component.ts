@@ -1,5 +1,5 @@
 // Enhanced dashboard.component.ts with PDF twin functionality
-import { Component, type OnInit, type OnDestroy, HostListener, ViewChild } from "@angular/core"
+import { Component, type OnInit, type OnDestroy, HostListener, ViewChild, Inject, PLATFORM_ID } from "@angular/core"
 import { isPlatformBrowser } from "@angular/common"
 import { type Observable, Subject, takeUntil } from "rxjs"
 import type { Chat } from "../../models/chat.model"
@@ -44,15 +44,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentTwinId = ""
 
   private destroy$ = new Subject<void>()
-  private platformId: Object
 
   constructor(
     private chatService: ChatService,
     private wsService: WebsocketService,
     private authService: AuthService,
     toasterService: ToastrService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.platformId = window
     this.chats$ = this.chatService.chats$
     this.messages$ = this.chatService.messages$
     this.currentChatId$ = this.chatService.currentChatId$
@@ -237,7 +236,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Implementation for creating new chat
   }
 
-  private fetchAudioBlob(blobUrl: string | Blob): Promise<Blob | null> {
+  private async fetchAudioBlob(blobUrl: string | Blob): Promise<Blob | null> {
     if (blobUrl instanceof Blob) {
       return Promise.resolve(blobUrl)
     }
@@ -276,7 +275,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // NEW: Helper method to fetch file blobs (including PDFs)
-  private fetchFileBlob(blobUrl: string | Blob): Promise<Blob | null> {
+  private async fetchFileBlob(blobUrl: string | Blob): Promise<Blob | null> {
     if (blobUrl instanceof Blob) {
       return Promise.resolve(blobUrl)
     }
