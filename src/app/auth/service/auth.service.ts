@@ -43,8 +43,8 @@ export class AuthService {
     }
   }
 
-   // Get user profile
-   getUserProfile(): Observable<User> {
+  // Get user profile
+  getUserProfile(): Observable<User> {
     return this.httpClient.get<User>(`${environment.apiUrl}/auth/profile/`).pipe(
       tap((user: any) => {
         localStorage.setItem('user_profile', JSON.stringify(user));
@@ -53,8 +53,8 @@ export class AuthService {
     );
   }
 
-   // Update user profile
-   updateUserProfile(profileData: any): Observable<User> {
+  // Update user profile
+  updateUserProfile(profileData: any): Observable<User> {
     return this.httpClient.put<User>(`${environment.apiUrl}/auth/profile/`, profileData).pipe(
       tap(updatedUser => {
         const currentUser = this.userSubject.value;
@@ -216,8 +216,8 @@ export class AuthService {
     return this.isAuthenticated.value && user.is_verified === false;
   }
 
-   // Upload profile image
-   uploadProfileImage(imageFile: File): Observable<any> {
+  // Upload profile image
+  uploadProfileImage(imageFile: File): Observable<any> {
     const formData = new FormData();
     formData.append('profile_image', imageFile);
 
@@ -267,11 +267,11 @@ export class AuthService {
       );
   }
 
-    /**
- * Verify if a password reset token is valid
- * @param token The password reset token to verify
- * @returns An observable with the verification result
- */
+  /**
+* Verify if a password reset token is valid
+* @param token The password reset token to verify
+* @returns An observable with the verification result
+*/
   verifyResetToken(token: string): Observable<any> {
     return this.httpClient.post<any>(`${this.apiUrl}/verify-token/`, { token })
       .pipe(
@@ -281,12 +281,22 @@ export class AuthService {
       );
   }
 
-  requestForgotPassword(email: string){
-    return this.httpClient.post<any>(`${this.apiUrl}/forgot-password/`, { email })
-      .pipe(
-        catchError(error => {
-          return throwError(() => error);
-        })
-      );
+  requestForgotPassword(email: string) {
+    return this.httpClient.post(`${this.apiUrl}/request-reset-password/`, { email });
+  }
+
+  // Delete account
+  deleteAccount(): Observable<any> {
+    return this.httpClient.delete(`${this.apiUrl}/profile/`).pipe(
+      finalize(() => {
+        if (this.isBrowser) {
+          sessionStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user_profile');
+          this.isAuthenticated.next(false);
+          this.userSubject.next(null);
+        }
+      })
+    );
   }
 }
