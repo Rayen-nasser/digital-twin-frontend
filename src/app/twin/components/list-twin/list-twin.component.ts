@@ -19,6 +19,8 @@ import {
 import { ToastrService } from 'ngx-toastr';
 import { ChatService } from '../../../chat/services/chat.service';
 import { AuthService } from '../../../auth/service/auth.service';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'app-list-twin',
@@ -104,7 +106,8 @@ export class ListTwinComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private toastService: ToastrService,
     private chatService: ChatService,
-    private authService: AuthService
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.filterForm = this.createFilterForm();
   }
@@ -595,9 +598,13 @@ export class ListTwinComponent implements OnInit, OnDestroy {
     return pages;
   }
 
-  encodeURI(url: string) {
-    return window.encodeURI(url);
+encodeURI(value: string): string {
+  if (isPlatformBrowser(this.platformId)) {
+    return window.encodeURI(value);
   }
+  // Fallback for SSR
+  return encodeURIComponent(value);
+}
 
   chatWithTwin(twin: Twin, $event: MouseEvent) {
     $event.stopPropagation();
