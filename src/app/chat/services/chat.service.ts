@@ -912,4 +912,15 @@ export class ChatService {
       }),
     )
   }
+
+  deleteChat(chatId: string) {
+    // TODO: delete the chat from the chats list
+    return this.http.delete(`${this.apiUrl}/chats/${chatId}/`).pipe(
+      tap(() => {
+        const currentChats = this.chatsSubject.value
+        const updatedChats = currentChats.filter((chat) => chat.id !== chatId)
+        this.chatsSubject.next(updatedChats)
+      }),
+    )
+  }
 }
