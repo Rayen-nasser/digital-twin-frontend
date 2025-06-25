@@ -7,7 +7,6 @@ import { ChatService } from "../../services/chat.service"
 import { WebsocketService } from "../../services/websocket.service"
 import { ThemeService } from "../../../core/services/theme.service"
 import { ToastrService } from "ngx-toastr"
-import { StreamingService } from "../../services/streaming.service"
 
 @Component({
   selector: "app-chat-window",
@@ -60,7 +59,6 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     private themeService: ThemeService,
     private ngZone: NgZone,
     private toastr: ToastrService,
-    private streamingService: StreamingService,
   ) {}
 
   ngOnInit(): void {
@@ -380,6 +378,24 @@ export class ChatWindowComponent implements OnInit, OnChanges, AfterViewChecked,
     this.reportMessageEvent.emit(`contact:${this.currentChatId}`)
   }
 
+  deleteChat(): void {
+    if (!this.currentChatId || !this.currentChat) return
+
+    if (confirm("Are you sure you want to delete this chat? This action cannot be undone.")) {
+      this.chatService.deleteChat(this.currentChatId).subscribe({
+        next: () => {
+          this.toastr.success("Chat deleted successfully")
+          this.showOptions = false
+          this.showChatList()
+        },
+        error: (error: any) => {
+          console.error("Error deleting chat:", error)
+          this.toastr.error("Failed to delete chat")
+        },
+      })
+    }
+  }
+
 archiveConversation() {
   if (!this.currentChatId || !this.currentChat) return
 
@@ -676,24 +692,18 @@ archiveConversation() {
     }
   }
 
-  // Send message to both chat and streaming
-  sendMessageToStreaming(text: string): void {
-    if (this.isStreamingActive) {
-      this.streamingService.sendText(text).subscribe({
-        next: (response) => {
-          console.log("Message sent to streaming:", response)
-          this.toastr.success("Message sent to AI avatar")
-        },
-        error: (error) => {
-          console.error("Error sending to streaming:", error)
-          this.toastr.error("Failed to send message to AI avatar")
-        },
-      })
-    }
-  }
-
   // Toggle streaming panel
   toggleStreamingPanel(): void {
-    this.showStreamingPanel = !this.showStreamingPanel
+    if (!this.currentChat?.twin_details) {
+      this.toastr.error('No twin details available');
+      return;
+    }
+
+    const params = new URLSearchParams({
+      twinAi: this.currentChat.twin_details.id || '',
+      twinName: this.currentChat.twin_details.twin_name || ''
+    });
+
+    window.open(`http://127.0.0.1:5500/index.html?${params.toString()}`, '_blank');
   }
 }
