@@ -65,7 +65,7 @@ export class CreateTwinComponent extends TwinFormBaseComponent {
           'Twin Created',
           'Your digital twin has been created successfully'
         );
-        this.router.navigate(['/twins', response.id]);
+        this.router.navigate(['/twin', response.id]);
       },
       error: (error) => {
         this.isProcessing = false;
